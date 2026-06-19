@@ -242,3 +242,25 @@ class GradeScale(SkolrBase, TimestampMixin):
     description: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
 
+class NotificationTemplate(SkolrBase, TimestampMixin):
+    __tablename__ = "notification_templates"
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    template_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    body_format: Mapped[str] = mapped_column(String(500), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), default="general", server_default="general")
+
+
+class NotificationLog(SkolrBase, TimestampMixin):
+    __tablename__ = "notification_logs"
+
+    sender_id: Mapped[UUID | None] = mapped_column(ForeignKey("public.users.id"), nullable=True)
+    recipient_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    recipient_phone: Mapped[str] = mapped_column(String(20), nullable=False)
+    message_body: Mapped[str] = mapped_column(String(1000), nullable=False)
+    channel: Mapped[str] = mapped_column(String(20), default="whatsapp", server_default="whatsapp")
+    status: Mapped[str] = mapped_column(String(20), default="pending", server_default="pending")
+    error_message: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+
+

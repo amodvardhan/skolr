@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { 
   GraduationCap, 
@@ -12,7 +12,8 @@ import {
   Globe,
   Settings,
   Contact,
-  BookOpen
+  BookOpen,
+  MessageSquare
 } from 'lucide-react';
 
 import { SubjectConfigPage } from '../modules/academics/pages/SubjectConfigPage';
@@ -21,9 +22,10 @@ import { HomeworkDetailPage } from '../modules/academics/pages/HomeworkDetailPag
 import { ExamSchedulePage } from '../modules/exams/pages/ExamSchedulePage';
 import { MarksEntryPage } from '../modules/exams/pages/MarksEntryPage';
 import { GradeScalePage } from '../modules/exams/pages/GradeScalePage';
+import { AnnouncementsPage } from '../modules/notifications/pages/AnnouncementsPage';
+import { NotificationLogsPage } from '../modules/notifications/pages/NotificationLogsPage';
 
 
-import { useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useUIStore } from '../stores/uiStore';
 import { useTenantStore } from '../stores/tenantStore';
@@ -84,6 +86,9 @@ function MainAppContent() {
   // Exams module inner navigation state
   const [examsView, setExamsView] = useState<'schedule' | 'marks' | 'grades'>('schedule');
 
+  // Notifications module inner navigation state
+  const [notificationsView, setNotificationsView] = useState<'broadcast' | 'logs'>('broadcast');
+
   useEffect(() => {
     resolveTenant();
   }, [resolveTenant]);
@@ -111,6 +116,7 @@ function MainAppContent() {
     { id: 'fees', name: 'Fees Ledger', icon: IndianRupee },
     { id: 'academics', name: 'Academics', icon: BookOpen },
     { id: 'exams', name: 'Exams & Grades', icon: GraduationCap },
+    { id: 'notifications', name: 'Announcements', icon: MessageSquare },
     { id: 'website', name: 'Website Builder', icon: Globe },
     ...(user?.role === 'school_admin' ? [
       { id: 'employees', name: 'Staff Directory', icon: Contact },
@@ -319,6 +325,35 @@ function MainAppContent() {
             {examsView === 'grades' && <GradeScalePage />}
           </div>
         );
+      case 'notifications':
+        return (
+          <div className="space-y-6">
+            <div className="flex border-b border-neutral-200 gap-6">
+              <button 
+                onClick={() => setNotificationsView('broadcast')}
+                className={`pb-3 text-sm font-semibold border-b-2 px-1 transition duration-150 ${
+                  notificationsView === 'broadcast' 
+                    ? 'border-primary text-primary' 
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Send Broadcasts
+              </button>
+              <button 
+                onClick={() => setNotificationsView('logs')}
+                className={`pb-3 text-sm font-semibold border-b-2 px-1 transition duration-150 ${
+                  notificationsView === 'logs' 
+                    ? 'border-primary text-primary' 
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Delivery Logs
+              </button>
+            </div>
+
+            {notificationsView === 'broadcast' ? <AnnouncementsPage /> : <NotificationLogsPage />}
+          </div>
+        );
       case 'settings':
         return <SettingsPage />;
       case 'employees':
@@ -398,6 +433,7 @@ function MainAppContent() {
                   if (item.id === 'students') setStudentView('list');
                   if (item.id === 'employees') setEmployeeView('list');
                   if (item.id === 'exams') setExamsView('schedule');
+                  if (item.id === 'notifications') setNotificationsView('broadcast');
                   if (item.id === 'academics') {
                     setAcademicsView('homework');
                     setAcademicsSubView('list');
