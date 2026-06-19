@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #1E40AF;
+  --primary-light: #3B82F6;
+  --accent: #F59E0B;
+  --success: #10B981;
+  --danger: #EF4444;
+  --warning: #F97316;
+  --neutral-50: #F8FAFC;
+  --neutral-900: #0F172A;
+}
+
+@layer base {
+  body {
+    @apply bg-neutral-50 text-neutral-900 font-sans min-h-screen;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-neutral-100 p-6;
+  }
+  
+  .page-header {
+    @apply flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4;
+  }
+  
+  .section-title {
+    @apply text-lg font-semibold text-neutral-900;
+  }
+
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-light text-white font-medium px-4 py-2 rounded-lg transition duration-200 shadow-sm disabled:opacity-50;
+  }
+  
+  .btn-secondary {
+    @apply bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 font-medium px-4 py-2 rounded-lg transition duration-200 disabled:opacity-50;
+  }
+  
+  .input-field {
+    @apply w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-neutral-100 disabled:cursor-not-allowed;
+  }
+  
+  select.input-field {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    @apply bg-no-repeat bg-white pr-10 cursor-pointer shadow-sm transition duration-150;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+    background-position: right 0.75rem center;
+    background-size: 1.25rem 1.25rem;
+  }
+  
+  select.input-field:hover:not(:disabled) {
+    @apply border-neutral-300;
+  }
+}
