@@ -1,4 +1,5 @@
 from sqlalchemy import String, Boolean, Date, ForeignKey, Integer, DateTime, Float, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from uuid import UUID
 from datetime import date, datetime
@@ -279,6 +280,27 @@ class CBSEProfile(SkolrBase, TimestampMixin):
     library_book_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     library_magazine_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     library_newspaper_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+class CMSSite(SkolrBase, TimestampMixin):
+    __tablename__ = "cms_sites"
+
+    template_id: Mapped[str] = mapped_column(String(100), default="template-001-prestige", server_default="template-001-prestige")
+    color_scheme: Mapped[str] = mapped_column(String(100), default="Navy & Gold", server_default="Navy & Gold")
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    settings: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+
+
+class CMSPage(SkolrBase, TimestampMixin):
+    __tablename__ = "cms_pages"
+
+    slug: Mapped[str] = mapped_column(String(100), nullable=False)
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    sections: Mapped[list] = mapped_column(JSONB, default=list, server_default="[]")
+    is_published: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    seo_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    seo_description: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
 
 

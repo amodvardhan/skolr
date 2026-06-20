@@ -8,7 +8,7 @@ import logging
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.middleware import TenantLoggingMiddleware
-from app.routers import auth, tenants, students, attendance, fees, dashboard, employee, academics, exams, notifications, cbse
+from app.routers import auth, tenants, students, attendance, fees, dashboard, employee, academics, exams, notifications, cbse, cms
 
 # Setup logger
 logging.basicConfig(level=logging.INFO)
@@ -47,6 +47,19 @@ app.include_router(academics.router, prefix="/api/v1")
 app.include_router(exams.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(cbse.router, prefix="/api/v1")
+app.include_router(cms.router, prefix="/api/v1")
+
+# Mount Static Files for Published School Websites
+from fastapi.staticfiles import StaticFiles
+import os
+os.makedirs("app/static/published", exist_ok=True)
+app.mount("/published", StaticFiles(directory="app/static/published"), name="published")
+
+# Mount template asset source directory for live customizer previews
+templates_static_dir = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../cms-templates")
+)
+app.mount("/templates", StaticFiles(directory=templates_static_dir), name="templates")
 
 @app.get("/api/v1/health")
 async def health_check(db: AsyncSession = Depends(get_db)):

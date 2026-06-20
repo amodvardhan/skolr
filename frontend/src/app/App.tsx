@@ -26,6 +26,7 @@ import { GradeScalePage } from '../modules/exams/pages/GradeScalePage';
 import { AnnouncementsPage } from '../modules/notifications/pages/AnnouncementsPage';
 import { NotificationLogsPage } from '../modules/notifications/pages/NotificationLogsPage';
 import { CBSECompliancePage } from '../modules/cbse/pages/CBSECompliancePage';
+import { CMSEditorPage } from '../modules/cms/pages/CMSEditorPage';
 
 
 import { useAuthStore } from '../stores/authStore';
@@ -371,6 +372,8 @@ function MainAppContent() {
         );
       case 'cbse':
         return <CBSECompliancePage />;
+      case 'website':
+        return <CMSEditorPage />;
       case 'settings':
         return <SettingsPage />;
       case 'employees':

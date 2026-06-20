@@ -1,0 +1,25 @@
+{
+  "id": "template-001-prestige",
+  "name": "Prestige",
+  "description": "Elegant and professional layout. Ideal for established CBSE and senior institutions.",
+  "thumbnail": "preview/thumb.png",
+  "color_schemes": [
+    { "name": "Navy & Gold", "primary": "#1E3A5F", "accent": "#F5A623", "bg": "#FFFFFF" },
+    { "name": "Forest & Cream", "primary": "#1B4332", "accent": "#D4A853", "bg": "#FAFAF7" },
+    { "name": "Earthy & Warm", "primary": "#78350F", "accent": "#D97706", "bg": "#FFFBEB" }
+  ],
+  "sections": {
+    "hero":          { "required": true,  "max": 1 },
+    "stats":         { "required": false, "max": 1 },
+    "about":         { "required": false, "max": 1 },
+    "testimonials":  { "required": false, "max": 1 },
+    "faculty":       { "required": false, "max": 1 },
+    "admissions":    { "required": false, "max": 1 },
+    "gallery":       { "required": false, "max": 1 },
+    "contact":       { "required": true,  "max": 1 }
+  },
+  "fonts": {
+    "display": "Plus Jakarta Sans",
+    "body": "Inter"
+  }
+}
