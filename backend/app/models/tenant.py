@@ -38,6 +38,7 @@ class Employee(SkolrBase, TimestampMixin):
     mobile: Mapped[str] = mapped_column(String(15), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="active") # active, inactive
+    qualification: Mapped[str | None] = mapped_column(String(100), nullable=True)
     
     user_id: Mapped[UUID | None] = mapped_column(ForeignKey("public.users.id"), nullable=True)
 
@@ -261,6 +262,24 @@ class NotificationLog(SkolrBase, TimestampMixin):
     channel: Mapped[str] = mapped_column(String(20), default="whatsapp", server_default="whatsapp")
     status: Mapped[str] = mapped_column(String(20), default="pending", server_default="pending")
     error_message: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+
+class CBSEProfile(SkolrBase, TimestampMixin):
+    __tablename__ = "cbse_profiles"
+
+    affiliation_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    school_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    land_area_sq_mtrs: Mapped[float] = mapped_column(Float, default=0.0, server_default="0.0")
+    built_up_area_sq_mtrs: Mapped[float] = mapped_column(Float, default=0.0, server_default="0.0")
+    playground_area_sq_mtrs: Mapped[float] = mapped_column(Float, default=0.0, server_default="0.0")
+    classroom_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    composite_science_lab_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    math_lab_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    computer_lab_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    library_book_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    library_magazine_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    library_newspaper_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
 
 
 

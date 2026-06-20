@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CBSE Affiliation Fact Sheet & Compliance Dossier</title>
+<style>
+  @page {
+    size: A4;
+    margin: 15mm;
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #64748b;
+    }
+    @bottom-left {
+      content: "Skolr Compliance Portal — Auto-Generated";
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #64748b;
+    }
+  }
+  
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.4;
+    font-size: 9pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header {
+    border-bottom: 2px solid #1e40af;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  
+  .header-title h1 {
+    font-size: 18pt;
+    font-weight: 800;
+    color: #1e40af;
+    margin: 0;
+    letter-spacing: -0.5px;
+  }
+  
+  .header-title p {
+    font-size: 9pt;
+    color: #64748b;
+    margin: 4px 0 0 0;
+  }
+  
+  .header-meta {
+    text-align: right;
+  }
+  
+  .header-meta .school-name {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  
+  .header-meta .school-subdomain {
+    font-size: 8.5pt;
+    color: #3b82f6;
+    font-family: monospace;
+    font-weight: 600;
+  }
+
+  .section-title {
+    font-size: 11pt;
+    font-weight: 800;
+    color: #0f172a;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+    margin-top: 24px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+  }
+  
+  .grid-table th {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    font-weight: 700;
+    color: #475569;
+    font-size: 8pt;
+    text-transform: uppercase;
+  }
+  
+  .grid-table td {
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    font-size: 8.5pt;
+  }
+
+  .grid-table tr:nth-child(even) {
+    background-color: #f8fafc/50;
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  
+  .badge-success {
+    background-color: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+  }
+  
+  .badge-danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+  }
+
+  .infrastructure-grid {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .infrastructure-grid td {
+    padding: 5px;
+    width: 50%;
+    vertical-align: top;
+  }
+
+  .infra-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px;
+    background-color: #fafafa;
+  }
+
+  .infra-card-title {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    border-bottom: 1px dashed #e2e8f0;
+    padding-bottom: 4px;
+  }
+
+  .infra-value-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 8.5pt;
+  }
+
+  .infra-value-label {
+    color: #475569;
+  }
+
+  .infra-value-number {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .signature-container {
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .signature-block {
+    text-align: center;
+    width: 45%;
+  }
+
+  .signature-line {
+    border-top: 1px solid #94a3b8;
+    margin-top: 40px;
+    padding-top: 6px;
+    font-size: 8pt;
+    font-weight: 600;
+    color: #475569;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Page 1: School Identity, Infrastructure & Compliance Summary -->
+  <div class="header">
+    <div class="header-title">
+      <h1>CBSE Affiliation Dossier</h1>
+      <p>Institutional Fact Sheet & Board Compliance Audit</p>
+    </div>
+    <div class="header-meta">
+      <div class="school-name">{{ school_name }}</div>
+      <div class="school-subdomain">{{ subdomain }}.skolr.in</div>
+    </div>
+  </div>
+
+  <div class="section-title">Institutional Identity</div>
+  <table class="grid-table">
+    <tr>
+      <td style="width: 25%; font-weight: 700; background-color: #f8fafc;">Affiliation No.</td>
+      <td style="width: 25%;">{{ profile.affiliation_number or "Not Configured" }}</td>
+      <td style="width: 25%; font-weight: 700; background-color: #f8fafc;">School Code</td>
+      <td style="width: 25%;">{{ profile.school_code or "Not Configured" }}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: 700; background-color: #f8fafc;">Affiliation Body</td>
+      <td>CBSE, New Delhi</td>
+      <td style="font-weight: 700; background-color: #f8fafc;">Audit Date</td>
+      <td>{{ current_date }}</td>
+    </tr>
+  </table>
+
+  <div class="section-title">Physical Infrastructure Summary</div>
+  <table class="infrastructure-grid">
+    <tr>
+      <td>
+        <div class="infra-card">
+          <div class="infra-card-title">Campus & Areas</div>
+          <div class="infra-value-row">
+            <span class="infra-value-label">Total Land Area</span>
+            <span class="infra-value-number">{{ "{:,.2f}".format(profile.land_area_sq_mtrs) }} sq. mtrs</span>
+          </div>
+          <div class="infra-value-row">
+            <span class="infra-value-label">Built-Up Area</span>
+            <span class="infra-value-number">{{ "{:,.2f}".format(profile.built_up_area_sq_mtrs) }} sq. mtrs</span>
+          </div>
+          <div class="infra-value-row">
+            <span class="infra-value-label">Playground Area</span>
+            <span class="infra-value-number">{{ "{:,.2f}".format(profile.playground_area_sq_mtrs) }} sq. mtrs</span>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="infra-card">
+          <div class="infra-card-title">Rooms & Laboratories</div>
+          <div class="infra-value-row">
+            <span class="infra-value-label">Classrooms Count</span>
+            <span class="infra-value-number">{{ profile.classroom_count }} rooms</span>
+          </div>
+          <div class="infra-value-row">
+            <span class="infra-value-label">Composite Science Lab</span>
+            <span class="infra-value-number">{{ profile.composite_science_lab_count }} labs</span>
+          </div>
+          <div class="infra-value-row">
+            <span class="infra-value-label">Mathematics Lab</span>
+            <span class="infra-value-number">{{ profile.math_lab_count }} labs</span>
+          </div>
+          <div class="infra-value-row">
+            <span class="infra-value-label">Computer Science Lab</span>
+            <span class="infra-value-number">{{ profile.computer_lab_count }} labs</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+        <div class="infra-card" style="margin-top: 5px;">
+          <div class="infra-card-title">Library Assets</div>
+          <div style="display: flex; justify-content: space-between;">
+            <div style="width: 30%;" class="infra-value-row">
+              <span class="infra-value-label">Total Books:</span>
+              <span class="infra-value-number">{{ profile.library_book_count }}</span>
+            </div>
+            <div style="width: 30%;" class="infra-value-row">
+              <span class="infra-value-label">Magazines:</span>
+              <span class="infra-value-number">{{ profile.library_magazine_count }}</span>
+            </div>
+            <div style="width: 30%;" class="infra-value-row">
+              <span class="infra-value-label">Newspapers:</span>
+              <span class="infra-value-number">{{ profile.library_newspaper_count }}</span>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="section-title">CBSE Core Compliance Checklist</div>
+  <table class="grid-table">
+    <thead>
+      <tr>
+        <th style="width: 35%;">Compliance Parameter</th>
+        <th style="width: 25%; text-align: center;">CBSE Standard</th>
+        <th style="width: 20%; text-align: center;">School Value</th>
+        <th style="width: 20%; text-align: center;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight: 600;">Student-Teacher Ratio</td>
+        <td style="text-align: center;">&le; 30.00 : 1</td>
+        <td style="text-align: center; font-weight: 700;">{{ "{:.2f}".format(stats.student_teacher_ratio) }} : 1</td>
+        <td style="text-align: center;">
+          {% if stats.student_teacher_compliant %}
+          <span class="badge badge-success">Compliant</span>
+          {% else %}
+          <span class="badge badge-danger">Non-Compliant</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td style="font-weight: 600;">Teacher-to-Section Ratio</td>
+        <td style="text-align: center;">&ge; 1.50 : 1</td>
+        <td style="text-align: center; font-weight: 700;">{{ "{:.2f}".format(stats.teacher_section_ratio) }} : 1</td>
+        <td style="text-align: center;">
+          {% if stats.teacher_section_compliant %}
+          <span class="badge badge-success">Compliant</span>
+          {% else %}
+          <span class="badge badge-danger">Non-Compliant</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td style="font-weight: 600;">Max Enrollment Per Section</td>
+        <td style="text-align: center;">&le; 40 students</td>
+        <td style="text-align: center; font-weight: 700;">
+          {% if stats.sections_over_capacity %}
+          {{ stats.sections_over_capacity|length }} Warning(s)
+          {% else %}
+          No Overcapacity
+          {% endif %}
+        </td>
+        <td style="text-align: center;">
+          {% if stats.sections_over_capacity_compliant %}
+          <span class="badge badge-success">Compliant</span>
+          {% else %}
+          <span class="badge badge-danger">Needs Review</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td style="font-weight: 600;">Curriculum Code Mapping</td>
+        <td style="text-align: center;">All Subjects Mapped</td>
+        <td style="text-align: center; font-weight: 700;">
+          {% if stats.subjects_missing_codes %}
+          {{ stats.subjects_missing_codes|length }} Missing Code(s)
+          {% else %}
+          100% Complete
+          {% endif %}
+        </td>
+        <td style="text-align: center;">
+          {% if stats.subjects_compliant %}
+          <span class="badge badge-success">Compliant</span>
+          {% else %}
+          <span class="badge badge-danger">Needs Review</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td style="font-weight: 600;">Campus Land Area</td>
+        <td style="text-align: center;">&ge; 4000.00 ㎡ (Metro)</td>
+        <td style="text-align: center; font-weight: 700;">{{ "{:,.2f}".format(profile.land_area_sq_mtrs) }} ㎡</td>
+        <td style="text-align: center;">
+          {% if stats.land_area_compliant %}
+          <span class="badge badge-success">Compliant</span>
+          {% else %}
+          <span class="badge badge-danger">Below Standard</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td style="font-weight: 600;">Library Books Inventory</td>
+        <td style="text-align: center;">&ge; {{ stats.library_books_required }} books</td>
+        <td style="text-align: center; font-weight: 700;">{{ profile.library_book_count }} books</td>
+        <td style="text-align: center;">
+          {% if stats.library_books_compliant %}
+          <span class="badge badge-success">Compliant</span>
+          {% else %}
+          <span class="badge badge-danger">Deficit</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td style="font-weight: 600;">Required Labs Presence</td>
+        <td style="text-align: center;">Sci, Math, CS Labs</td>
+        <td style="text-align: center; font-weight: 700;">
+          {% if stats.labs_compliant %}
+          All Labs Present
+          {% else %}
+          {{ stats.missing_labs|length }} Missing
+          {% endif %}
+        </td>
+        <td style="text-align: center;">
+          {% if stats.labs_compliant %}
+          <span class="badge badge-success">Compliant</span>
+          {% else %}
+          <span class="badge badge-danger">Needs Review</span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Page Break for Staff & Subjects list -->
+  <div class="page-break"></div>
+
+  <div class="header">
+    <div class="header-title">
+      <h1>CBSE Affiliation Dossier</h1>
+      <p>Staff Qualifications & Subject Catalog Ledger</p>
+    </div>
+    <div class="header-meta">
+      <div class="school-name">{{ school_name }}</div>
+      <div class="school-subdomain">{{ subdomain }}.skolr.in</div>
+    </div>
+  </div>
+
+  <div class="section-title">Teaching Staff Ledger</div>
+  <table class="grid-table">
+    <thead>
+      <tr>
+        <th style="width: 15%;">Staff Code</th>
+        <th style="width: 30%;">Teacher Name</th>
+        <th style="width: 20%;">Designation</th>
+        <th style="width: 20%;">Qualification</th>
+        <th style="width: 15%;">Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for teacher in teachers %}
+      <tr>
+        <td style="font-family: monospace;">{{ teacher.employee_code }}</td>
+        <td style="font-weight: 600;">{{ teacher.first_name }} {{ teacher.last_name }}</td>
+        <td>{{ teacher.designation }}</td>
+        <td style="font-weight: 500;">
+          {% if teacher.qualification == "Not Configured" %}
+          <span style="color: #b91c1c; font-weight: 700;">Missing Qualification</span>
+          {% else %}
+          {{ teacher.qualification }}
+          {% endif %}
+        </td>
+        <td>{{ teacher.employment_type|capitalize }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="section-title">Academic Curriculum Subjects Catalog</div>
+  <table class="grid-table">
+    <thead>
+      <tr>
+        <th style="width: 50%;">Subject Name</th>
+        <th style="width: 50%;">CBSE Curriculum Subject Code</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sub in subjects %}
+      <tr>
+        <td style="font-weight: 600;">{{ sub.name }}</td>
+        <td style="font-family: monospace; font-weight: bold; color: #1e40af;">
+          {% if sub.code == "Not Configured" or not sub.code %}
+          <span style="color: #b91c1c; font-weight: 700;">Code Not Set</span>
+          {% else %}
+          {{ sub.code }}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="signature-container">
+    <div class="signature-block">
+      <div class="signature-line">Institutional Principal Signature</div>
+    </div>
+    <div class="signature-block">
+      <div class="signature-line">School Management Stamp / Date</div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -8,7 +8,7 @@ import logging
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.middleware import TenantLoggingMiddleware
-from app.routers import auth, tenants, students, attendance, fees, dashboard, employee, academics, exams, notifications
+from app.routers import auth, tenants, students, attendance, fees, dashboard, employee, academics, exams, notifications, cbse
 
 # Setup logger
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +46,7 @@ app.include_router(employee.router, prefix="/api/v1")
 app.include_router(academics.router, prefix="/api/v1")
 app.include_router(exams.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
+app.include_router(cbse.router, prefix="/api/v1")
 
 @app.get("/api/v1/health")
 async def health_check(db: AsyncSession = Depends(get_db)):

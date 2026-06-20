@@ -13,7 +13,8 @@ import {
   Settings,
   Contact,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  ShieldCheck
 } from 'lucide-react';
 
 import { SubjectConfigPage } from '../modules/academics/pages/SubjectConfigPage';
@@ -24,6 +25,7 @@ import { MarksEntryPage } from '../modules/exams/pages/MarksEntryPage';
 import { GradeScalePage } from '../modules/exams/pages/GradeScalePage';
 import { AnnouncementsPage } from '../modules/notifications/pages/AnnouncementsPage';
 import { NotificationLogsPage } from '../modules/notifications/pages/NotificationLogsPage';
+import { CBSECompliancePage } from '../modules/cbse/pages/CBSECompliancePage';
 
 
 import { useAuthStore } from '../stores/authStore';
@@ -117,6 +119,7 @@ function MainAppContent() {
     { id: 'academics', name: 'Academics', icon: BookOpen },
     { id: 'exams', name: 'Exams & Grades', icon: GraduationCap },
     { id: 'notifications', name: 'Announcements', icon: MessageSquare },
+    { id: 'cbse', name: 'CBSE Compliance', icon: ShieldCheck },
     { id: 'website', name: 'Website Builder', icon: Globe },
     ...(user?.role === 'school_admin' ? [
       { id: 'employees', name: 'Staff Directory', icon: Contact },
@@ -354,6 +357,8 @@ function MainAppContent() {
             {notificationsView === 'broadcast' ? <AnnouncementsPage /> : <NotificationLogsPage />}
           </div>
         );
+      case 'cbse':
+        return <CBSECompliancePage />;
       case 'settings':
         return <SettingsPage />;
       case 'employees':

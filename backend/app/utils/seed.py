@@ -173,6 +173,7 @@ async def seed_database():
                 mobile="9876543210",
                 email="admin@default.skolr.in",
                 status="active",
+                qualification="M.A., M.Ed.",
                 user_id=admin_user.id if admin_user else None
             )
             session.add(emp)
@@ -189,6 +190,7 @@ async def seed_database():
                 mobile="9876543212",
                 email="teacher@default.skolr.in",
                 status="active",
+                qualification="M.Sc., B.Ed.",
                 user_id=teacher_user.id if teacher_user else None
             )
             session.add(teacher_emp)
