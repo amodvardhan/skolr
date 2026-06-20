@@ -117,3 +117,60 @@ class FeeSummaryResponse(BaseModel):
     total_outstanding: float
     total_applicable: float
     collection_rate: float # percentage
+
+# Fees Analytics Detail Schemas
+class MonthlyCollection(BaseModel):
+    month: str
+    amount: float
+
+class PaymentModeBreakdown(BaseModel):
+    mode: str
+    amount: float
+    count: int
+
+class ClassCollectionPerformance(BaseModel):
+    class_name: str
+    section: str
+    expected: float
+    collected: float
+    discount: float
+    outstanding: float
+    collection_rate: float
+
+class FeesAnalyticsResponseData(BaseModel):
+    summary: FeeSummaryResponse
+    monthly_collections: List[MonthlyCollection]
+    payment_modes: List[PaymentModeBreakdown]
+    class_collections: List[ClassCollectionPerformance]
+
+class FeesAnalyticsResponse(BaseModel):
+    success: bool = True
+    data: FeesAnalyticsResponseData
+    message: str = "OK"
+
+# Transaction Ledger Schemas
+class FeeTransactionLedgerItem(BaseModel):
+    id: UUID
+    receipt_number: str
+    amount_paid: float
+    payment_mode: str
+    payment_date: date
+    transaction_reference: Optional[str] = None
+    remarks: Optional[str] = None
+    student_first_name: str
+    student_last_name: str
+    student_admission_number: str
+    class_name: str
+    class_section: str
+
+class FeeTransactionPagination(BaseModel):
+    page: int
+    per_page: int
+    total: int
+    pages: int
+
+class FeeTransactionLedgerResponse(BaseModel):
+    success: bool = True
+    data: List[FeeTransactionLedgerItem]
+    pagination: FeeTransactionPagination
+    message: str = "OK"

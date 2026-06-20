@@ -589,3 +589,35 @@ class FeesService:
                     logger.error(f"Failed to dispatch payment success WhatsApp alert: {str(ex)}")
                     
         return {"success": True, "receipt_number": receipt_no, "status": "processed"}
+
+    async def get_fees_analytics(self) -> dict:
+        summary = await self.repo.get_ledger_summary()
+        monthly = await self.repo.get_monthly_collections()
+        modes = await self.repo.get_payment_mode_breakdown()
+        classes = await self.repo.get_class_collection_performance()
+        
+        return {
+            "summary": {
+                "total_collected": summary["total_collected"],
+                "total_outstanding": summary["total_outstanding"],
+                "total_applicable": summary["total_applicable"],
+                "collection_rate": summary["collection_rate"]
+            },
+            "monthly_collections": monthly,
+            "payment_modes": modes,
+            "class_collections": classes
+        }
+
+    async def get_transactions_ledger(
+        self,
+        page: int = 1,
+        per_page: int = 20,
+        payment_mode: Optional[str] = None,
+        search: Optional[str] = None
+    ) -> Tuple[List[dict], int]:
+        return await self.repo.get_all_transactions_ledger(
+            page=page,
+            per_page=per_page,
+            payment_mode=payment_mode,
+            search=search
+        )

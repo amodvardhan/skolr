@@ -12,7 +12,9 @@ from app.schemas.fees import (
     FeeStructureCreate, FeeStructureResponse,
     StudentFeeAccountResponse, StudentFeeAccountDetailResponse,
     FeeTransactionCreate, FeeTransactionResponse,
-    FeeDefaulterResponse, FeeSummaryResponse
+    FeeDefaulterResponse, FeeSummaryResponse,
+    FeesAnalyticsResponse, FeeTransactionLedgerResponse,
+    FeeTransactionPagination
 )
 from app.models.public import User
 from pydantic import BaseModel
@@ -139,6 +141,47 @@ async def get_ledger_summary(
     repo = FeesRepository(db)
     service = FeesService(repo)
     return await service.get_ledger_summary()
+
+@router.get("/analytics", response_model=FeesAnalyticsResponse)
+async def get_fees_analytics(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(["school_admin", "accountant"]))
+):
+    repo = FeesRepository(db)
+    service = FeesService(repo)
+    data = await service.get_fees_analytics()
+    return FeesAnalyticsResponse(success=True, data=data, message="OK")
+
+@router.get("/transactions", response_model=FeeTransactionLedgerResponse)
+async def get_transactions_ledger(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    payment_mode: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(["school_admin", "accountant"]))
+):
+    repo = FeesRepository(db)
+    service = FeesService(repo)
+    items, total = await service.get_transactions_ledger(
+        page=page,
+        per_page=per_page,
+        payment_mode=payment_mode,
+        search=search
+    )
+    pages = (total + per_page - 1) // per_page
+    pagination = FeeTransactionPagination(
+        page=page,
+        per_page=per_page,
+        total=total,
+        pages=pages
+    )
+    return FeeTransactionLedgerResponse(
+        success=True,
+        data=items,
+        pagination=pagination,
+        message="OK"
+    )
 
 @router.get("/transactions/{transaction_id}/receipt")
 async def download_receipt(

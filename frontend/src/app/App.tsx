@@ -43,6 +43,7 @@ import { AttendanceSummaryPage } from '../modules/attendance/pages/AttendanceSum
 import { FeeStructurePage } from '../modules/fees/pages/FeeStructurePage';
 import { FeeCollectPage } from '../modules/fees/pages/FeeCollectPage';
 import { FeeDefaultersPage } from '../modules/fees/pages/FeeDefaultersPage';
+import { FeeDashboardPage } from '../modules/fees/pages/FeeDashboardPage';
 import { EmployeeListPage } from '../modules/employees/pages/EmployeeListPage';
 import { EmployeeFormPage } from '../modules/employees/pages/EmployeeFormPage';
 import { EmployeeDetailPage } from '../modules/employees/pages/EmployeeDetailPage';
@@ -73,7 +74,7 @@ function MainAppContent() {
   const [attendanceView, setAttendanceView] = useState<'mark' | 'analytics'>('mark');
   
   // Fees module inner navigation state
-  const [feesView, setFeesView] = useState<'defaulters' | 'collect' | 'structure'>('defaulters');
+  const [feesView, setFeesView] = useState<'dashboard' | 'defaulters' | 'collect' | 'structure'>('dashboard');
   const [selectedFeeStudentId, setSelectedFeeStudentId] = useState<string>('');
 
   // Employee module inner navigation state
@@ -191,6 +192,16 @@ function MainAppContent() {
           <div className="space-y-6">
             <div className="flex border-b border-neutral-200 gap-6">
               <button 
+                onClick={() => setFeesView('dashboard')}
+                className={`pb-3 text-sm font-semibold border-b-2 px-1 transition duration-150 ${
+                  feesView === 'dashboard' 
+                    ? 'border-primary text-primary' 
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Analytics Dashboard
+              </button>
+              <button 
                 onClick={() => setFeesView('defaulters')}
                 className={`pb-3 text-sm font-semibold border-b-2 px-1 transition duration-150 ${
                   feesView === 'defaulters' 
@@ -222,6 +233,7 @@ function MainAppContent() {
               </button>
             </div>
 
+            {feesView === 'dashboard' && <FeeDashboardPage />}
             {feesView === 'defaulters' && (
               <FeeDefaultersPage 
                 onCollectClick={(studentId) => {

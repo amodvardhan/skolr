@@ -93,6 +93,67 @@ export interface FeeSummary {
   collection_rate: number;
 }
 
+export interface MonthlyCollection {
+  month: string;
+  amount: number;
+}
+
+export interface PaymentModeBreakdown {
+  mode: string;
+  amount: number;
+  count: number;
+}
+
+export interface ClassCollectionPerformance {
+  class_name: string;
+  section: string;
+  expected: number;
+  collected: number;
+  discount: number;
+  outstanding: number;
+  collection_rate: number;
+}
+
+export interface FeesAnalytics {
+  summary: FeeSummary;
+  monthly_collections: MonthlyCollection[];
+  payment_modes: PaymentModeBreakdown[];
+  class_collections: ClassCollectionPerformance[];
+}
+
+export interface FeeTransactionLedgerItem {
+  id: string;
+  receipt_number: string;
+  amount_paid: number;
+  payment_mode: string;
+  payment_date: string;
+  transaction_reference?: string;
+  remarks?: string;
+  student_first_name: string;
+  student_last_name: string;
+  student_admission_number: string;
+  class_name: string;
+  class_section: string;
+}
+
+export interface FeesAnalyticsResponse {
+  success: boolean;
+  data: FeesAnalytics;
+  message: string;
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: T[];
+  pagination: {
+    page: number;
+    per_page: number;
+    total: number;
+    pages: number;
+  };
+  message: string;
+}
+
 export const feesApi = {
   getHeads: async (): Promise<FeeHead[]> => {
     const response = await api.get('/fees/heads');
@@ -139,6 +200,21 @@ export const feesApi = {
 
   getSummary: async (): Promise<FeeSummary> => {
     const response = await api.get('/fees/summary');
+    return response.data;
+  },
+
+  getAnalytics: async (): Promise<FeesAnalyticsResponse> => {
+    const response = await api.get('/fees/analytics');
+    return response.data;
+  },
+
+  getTransactionsLedger: async (params: {
+    page: number;
+    per_page: number;
+    payment_mode?: string;
+    search?: string;
+  }): Promise<PaginatedResponse<FeeTransactionLedgerItem>> => {
+    const response = await api.get('/fees/transactions', { params });
     return response.data;
   },
 

@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import date
 from typing import List, Optional, Tuple
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -174,3 +174,163 @@ class FeesRepository:
             "total_applicable": applicable,
             "collection_rate": round((paid / applicable * 100), 2) if applicable > 0 else 100.0
         }
+
+    # Monthly Collections
+    async def get_monthly_collections(self) -> List[dict]:
+        month_expr = func.to_char(FeeTransaction.payment_date, 'YYYY-MM')
+        query = (
+            select(
+                month_expr.label("month_str"),
+                func.sum(FeeTransaction.amount_paid).label("total_amount")
+            )
+            .group_by(month_expr)
+            .order_by(month_expr.asc())
+            .limit(12)
+        )
+        result = await self.db.execute(query)
+        import datetime
+        data = []
+        for row in result.all():
+            try:
+                # Format to readable string like "June 2026"
+                dt = datetime.datetime.strptime(row.month_str, "%Y-%m")
+                readable_month = dt.strftime("%B %Y")
+            except Exception:
+                readable_month = row.month_str
+            data.append({
+                "month": readable_month,
+                "amount": row.total_amount or 0.0
+            })
+        return data
+
+    # Payment Modes Breakdown
+    async def get_payment_mode_breakdown(self) -> List[dict]:
+        query = (
+            select(
+                FeeTransaction.payment_mode,
+                func.sum(FeeTransaction.amount_paid).label("total_amount"),
+                func.count(FeeTransaction.id).label("count")
+            )
+            .group_by(FeeTransaction.payment_mode)
+        )
+        result = await self.db.execute(query)
+        return [
+            {
+                "mode": row.payment_mode.upper() if row.payment_mode else "UNKNOWN",
+                "amount": row.total_amount or 0.0,
+                "count": row.count
+            }
+            for row in result.all()
+        ]
+
+    # Class-wise Collection Performance
+    async def get_class_collection_performance(self) -> List[dict]:
+        query = (
+            select(
+                Class.name.label("class_name"),
+                Class.section.label("section"),
+                func.sum(StudentFeeAccount.total_applicable).label("expected"),
+                func.sum(StudentFeeAccount.total_paid).label("collected"),
+                func.sum(StudentFeeAccount.total_discount).label("discount")
+            )
+            .select_from(Class)
+            .join(Student, Student.class_id == Class.id)
+            .join(StudentFeeAccount, StudentFeeAccount.student_id == Student.id)
+            .where(Class.deleted_at.is_(None), Student.deleted_at.is_(None))
+            .group_by(Class.id, Class.name, Class.section)
+            .order_by(Class.name, Class.section)
+        )
+        result = await self.db.execute(query)
+        data = []
+        for row in result.all():
+            expected = row.expected or 0.0
+            collected = row.collected or 0.0
+            discount = row.discount or 0.0
+            outstanding = max(0.0, expected - collected - discount)
+            rate = round((collected / expected * 100), 2) if expected > 0 else 100.0
+            data.append({
+                "class_name": row.class_name,
+                "section": row.section,
+                "expected": expected,
+                "collected": collected,
+                "discount": discount,
+                "outstanding": outstanding,
+                "collection_rate": rate
+            })
+        return data
+
+    # All Transactions Ledger (Paginated + Search + Filter)
+    async def get_all_transactions_ledger(
+        self,
+        page: int = 1,
+        per_page: int = 20,
+        payment_mode: Optional[str] = None,
+        search: Optional[str] = None
+    ) -> Tuple[List[dict], int]:
+        query = (
+            select(
+                FeeTransaction.id,
+                FeeTransaction.receipt_number,
+                FeeTransaction.amount_paid,
+                FeeTransaction.payment_mode,
+                FeeTransaction.payment_date,
+                FeeTransaction.transaction_reference,
+                FeeTransaction.remarks,
+                Student.first_name,
+                Student.last_name,
+                Student.admission_number,
+                Class.name.label("class_name"),
+                Class.section.label("class_section")
+            )
+            .join(Student, Student.id == FeeTransaction.student_id)
+            .join(Class, Class.id == Student.class_id)
+            .where(Student.deleted_at.is_(None))
+        )
+        
+        filters = []
+        if payment_mode:
+            filters.append(FeeTransaction.payment_mode == payment_mode.lower())
+        if search:
+            search_term = f"%{search}%"
+            filters.append(
+                or_(
+                    Student.first_name.ilike(search_term),
+                    Student.last_name.ilike(search_term),
+                    Student.admission_number.ilike(search_term),
+                    FeeTransaction.receipt_number.ilike(search_term)
+                )
+            )
+            
+        if filters:
+            query = query.where(and_(*filters))
+            
+        # Count total items
+        count_query = select(func.count()).select_from(query.subquery())
+        total = await self.db.scalar(count_query) or 0
+        
+        # Paginate and order
+        query = (
+            query.order_by(FeeTransaction.payment_date.desc(), FeeTransaction.created_at.desc())
+            .limit(per_page)
+            .offset((page - 1) * per_page)
+        )
+        
+        result = await self.db.execute(query)
+        items = []
+        for row in result.all():
+            items.append({
+                "id": row.id,
+                "receipt_number": row.receipt_number,
+                "amount_paid": row.amount_paid,
+                "payment_mode": row.payment_mode,
+                "payment_date": row.payment_date,
+                "transaction_reference": row.transaction_reference,
+                "remarks": row.remarks,
+                "student_first_name": row.first_name,
+                "student_last_name": row.last_name,
+                "student_admission_number": row.admission_number,
+                "class_name": row.class_name,
+                "class_section": row.class_section
+            })
+            
+        return items, total
