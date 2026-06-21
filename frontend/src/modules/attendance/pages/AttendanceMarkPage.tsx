@@ -15,6 +15,8 @@ import {
 import { studentApi } from '../../students/api/studentApi';
 import { attendanceApi, StudentAttendanceMark } from '../api/attendanceApi';
 import { CustomSelect } from '../../../components/CustomSelect';
+import { DatePicker } from '../../../components/DatePicker';
+import { toast } from '../../../stores/useToastStore';
 
 export function AttendanceMarkPage() {
   const queryClient = useQueryClient();
@@ -97,11 +99,11 @@ export function AttendanceMarkPage() {
     mutationFn: (data: Parameters<typeof attendanceApi.mark>[0]) => attendanceApi.mark(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['attendance-session'] });
-      alert('Attendance saved successfully!');
+      toast.success('Attendance saved successfully!');
     },
     onError: (err: any) => {
       const msg = err.response?.data?.detail || 'Failed to save attendance';
-      alert(msg);
+      toast.error(msg);
     }
   });
 
@@ -196,11 +198,9 @@ export function AttendanceMarkPage() {
 
         <div>
           <label className="block text-xs font-semibold uppercase text-neutral-500 mb-1.5">Date</label>
-          <input
-            type="date"
+          <DatePicker
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="input-field"
+            onChange={(val) => setSelectedDate(val)}
           />
         </div>
 

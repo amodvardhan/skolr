@@ -5,8 +5,34 @@ from fastapi import HTTPException, status
 from datetime import datetime
 
 from app.repositories.student import StudentRepository
-from app.models.tenant import Student, StudentParent, Class, AcademicYear
+from app.models.tenant import Student, StudentParent, Class, AcademicYear, CMSSite
 from app.schemas.student import StudentCreate, StudentUpdate
+
+async def notify_student_admission(student_name: str, admission_number: str, parent_mobile: str):
+    try:
+        from app.utils.whatsapp import whatsapp_client
+        template_name = "jaspers_market_order_confirmation_v1"
+        body_params = [
+            student_name,
+            "Admission Successful",
+            f"No: {admission_number}"
+        ]
+        
+        import logging
+        logger = logging.getLogger("student_service")
+        logger.info(f"Triggering student admission WhatsApp alert for {student_name} to {parent_mobile}...")
+        
+        await whatsapp_client.send_template_message(
+            to_phone=parent_mobile,
+            template_name=template_name,
+            language_code="en_US",
+            body_parameters=body_params
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger("student_service")
+        logger.error(f"Failed to send student admission WhatsApp alert: {str(e)}")
+
 
 class StudentService:
     def __init__(self, repo: StudentRepository):
@@ -124,7 +150,39 @@ class StudentService:
         student.parents = db_parents
 
         # 6. Save to repository
-        return await self.repo.create(student)
+        saved_student = await self.repo.create(student)
+
+        # 7. Trigger WhatsApp notification to parent if enabled
+        try:
+            site_res = await self.repo.db.execute(
+                select(CMSSite).where(CMSSite.deleted_at.is_(None)).limit(1)
+            )
+            site = site_res.scalar_one_or_none()
+            whatsapp_enabled = True
+            if site and site.settings:
+                whatsapp_enabled = site.settings.get("whatsapp_admission_enabled", True)
+                
+            if whatsapp_enabled:
+                primary_parent = next((p for p in saved_student.parents if p.parent_type in ['father', 'guardian']), None)
+                if not primary_parent and saved_student.parents:
+                    primary_parent = saved_student.parents[0]
+                    
+                if primary_parent and primary_parent.mobile:
+                    import asyncio
+                    student_name = f"{saved_student.first_name} {saved_student.last_name}"
+                    asyncio.create_task(
+                        notify_student_admission(
+                            student_name=student_name,
+                            admission_number=saved_student.admission_number,
+                            parent_mobile=primary_parent.mobile
+                        )
+                    )
+        except Exception as e:
+            import logging
+            logger = logging.getLogger("student_service")
+            logger.error(f"Error triggering background admission notification: {str(e)}")
+
+        return saved_student
 
     async def get_student_profile(self, student_id: UUID) -> Student:
         student = await self.repo.get_by_id(student_id)

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { studentApi } from '../../students/api/studentApi';
 import { attendanceApi } from '../api/attendanceApi';
+import { DatePicker } from '../../../components/DatePicker';
 
 export function AttendanceSummaryPage() {
   // Select past 30 days by default
@@ -101,21 +102,17 @@ export function AttendanceSummaryPage() {
 
         <div>
           <label className="block text-xs font-semibold uppercase text-neutral-500 mb-1.5">Start Date</label>
-          <input
-            type="date"
+          <DatePicker
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="input-field"
+            onChange={(val) => setStartDate(val)}
           />
         </div>
 
         <div>
           <label className="block text-xs font-semibold uppercase text-neutral-500 mb-1.5">End Date</label>
-          <input
-            type="date"
+          <DatePicker
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="input-field"
+            onChange={(val) => setEndDate(val)}
           />
         </div>
 

@@ -56,6 +56,7 @@ import { ParentAttendancePage } from '../modules/parent/pages/ParentAttendancePa
 import { ParentAcademicsPage } from '../modules/parent/pages/ParentAcademicsPage';
 import { ParentFeesPage } from '../modules/parent/pages/ParentFeesPage';
 import { parentApi } from '../modules/parent/api/parentApi';
+import { Toaster } from '../components/Toaster';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -656,6 +657,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <MainAppContent />
+      <Toaster />
     </QueryClientProvider>
   );
 }

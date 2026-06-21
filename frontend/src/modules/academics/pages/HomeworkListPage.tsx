@@ -19,6 +19,8 @@ import { academicsApi, HomeworkCreateData } from '../api/academicsApi';
 import { studentApi } from '../../students/api/studentApi';
 import { CustomSelect } from '../../../components/CustomSelect';
 import { useAuthStore } from '../../../stores/authStore';
+import { DatePicker } from '../../../components/DatePicker';
+import { toast } from '../../../stores/useToastStore';
 
 const homeworkSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters").max(200),
@@ -89,7 +91,7 @@ export function HomeworkListPage({ onViewDetails }: HomeworkListPageProps) {
       reset();
       setShowModal(false);
       setSubmitError(null);
-      alert('Homework assigned successfully!');
+      toast.success('Homework assigned successfully!');
     },
     onError: (err: any) => {
       console.error(err);
@@ -101,11 +103,11 @@ export function HomeworkListPage({ onViewDetails }: HomeworkListPageProps) {
     mutationFn: academicsApi.deleteHomework,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['homework-list'] });
-      alert('Homework task deleted.');
+      toast.success('Homework task deleted.');
     },
     onError: (err: any) => {
       console.error(err);
-      alert(err.response?.data?.detail || 'Failed to delete homework.');
+      toast.error(err.response?.data?.detail || 'Failed to delete homework.');
     }
   });
 
@@ -368,11 +370,15 @@ export function HomeworkListPage({ onViewDetails }: HomeworkListPageProps) {
                 {/* Due Date */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase text-neutral-500">Due Date <span className="text-red-500">*</span></label>
-                  <input
-                    type="date"
-                    {...register('due_date')}
-                    className="input-field"
-                    required
+                  <Controller
+                    control={control}
+                    name="due_date"
+                    render={({ field }) => (
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                   {errors.due_date && (
                     <p className="text-red-500 text-xs mt-0.5">{errors.due_date.message}</p>

@@ -13,6 +13,9 @@ class CMSSiteSettings(BaseModel):
     instagram_url: Optional[str] = None
     twitter_url: Optional[str] = None
     linkedin_url: Optional[str] = None
+    whatsapp_admission_enabled: bool = True
+    whatsapp_payment_enabled: bool = True
+    whatsapp_attendance_enabled: bool = True
 
 class CMSSiteResponseData(BaseModel):
     id: UUID

@@ -113,6 +113,22 @@ class AttendanceService:
         """
         Background task querying parent mobile details for absent students and dispatching WhatsApp alerts.
         """
+        try:
+            from app.models.tenant import CMSSite
+            site_res = await self.repo.db.execute(
+                select(CMSSite).where(CMSSite.deleted_at.is_(None)).limit(1)
+            )
+            site = site_res.scalar_one_or_none()
+            whatsapp_enabled = True
+            if site and site.settings:
+                whatsapp_enabled = site.settings.get("whatsapp_attendance_enabled", True)
+                
+            if not whatsapp_enabled:
+                logger.info("WhatsApp attendance notifications are disabled in settings.")
+                return
+        except Exception as e:
+            logger.error(f"Failed to check WhatsApp settings for attendance alerts: {str(e)}")
+            
         date_str = session_date.strftime("%d-%m-%Y")
         for sid in student_ids:
             try:

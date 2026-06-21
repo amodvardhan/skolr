@@ -7,6 +7,7 @@ import { ArrowLeft, Save, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
 
 import { studentApi } from '../api/studentApi';
 import { CustomSelect } from '../../../components/CustomSelect';
+import { DatePicker } from '../../../components/DatePicker';
 
 const parentSchema = z.object({
   first_name: z.string().min(2, "First name is too short"),
@@ -225,10 +226,15 @@ export function StudentFormPage({ onCancel, onSuccess, prefillData }: StudentFor
               <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">
                 Date of Birth <span className="text-red-500">*</span>
               </label>
-              <input
-                type="date"
-                {...register('date_of_birth')}
-                className="input-field"
+              <Controller
+                control={control}
+                name="date_of_birth"
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               {errors.date_of_birth && (
                 <p className="text-red-500 text-xs mt-1">{errors.date_of_birth.message}</p>
@@ -239,10 +245,15 @@ export function StudentFormPage({ onCancel, onSuccess, prefillData }: StudentFor
               <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">
                 Admission Date <span className="text-red-500">*</span>
               </label>
-              <input
-                type="date"
-                {...register('admission_date')}
-                className="input-field"
+              <Controller
+                control={control}
+                name="admission_date"
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               {errors.admission_date && (
                 <p className="text-red-500 text-xs mt-1">{errors.admission_date.message}</p>

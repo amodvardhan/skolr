@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 from fastapi import HTTPException, status
 
 from app.repositories.fees import FeesRepository
-from app.models.tenant import FeeStructureItem, StudentFeeAccount, FeeTransaction, Student
+from app.models.tenant import FeeStructureItem, StudentFeeAccount, FeeTransaction, Student, CMSSite, StudentParent
 from app.models.public import Tenant
 from app.schemas.fees import FeeStructureCreate, FeeTransactionCreate
 from sqlalchemy import select, text
@@ -80,7 +80,6 @@ class FeesService:
         # 2. Generate new receipt number
         receipt_no = await self.repo.get_next_receipt_number()
         
-        # 3. Create transaction
         txn = FeeTransaction(
             student_id=data.student_id,
             receipt_number=receipt_no,
@@ -91,7 +90,19 @@ class FeesService:
             remarks=data.remarks
         )
         
-        return await self.repo.create_transaction(txn)
+        saved_txn = await self.repo.create_transaction(txn)
+        
+        # Trigger WhatsApp success notification in the background
+        import asyncio
+        asyncio.create_task(
+            self._notify_payment_success(
+                student_id=data.student_id,
+                amount_paid=data.amount_paid,
+                receipt_number=receipt_no
+            )
+        )
+        
+        return saved_txn
 
     async def get_defaulters(self):
         rows = await self.repo.get_defaulters()
@@ -545,35 +556,61 @@ class FeesService:
         await self.repo.db.commit()
         
         # 5. Send confirmation WhatsApp message to parent
-        result_student = await self.repo.db.execute(
-            select(Student)
-            .where(Student.id == student_id, Student.deleted_at.is_(None))
-        )
-        student = result_student.scalar_one_or_none()
-        if student:
-            result_parent = await self.repo.db.execute(
-                select(StudentParent)
-                .where(
-                    StudentParent.student_id == student_id,
-                    StudentParent.parent_type.in_(["father", "guardian"]),
-                    StudentParent.deleted_at.is_(None)
-                )
-                .limit(1)
+        import asyncio
+        asyncio.create_task(
+            self._notify_payment_success(
+                student_id=student_id,
+                amount_paid=amount_paid,
+                receipt_number=receipt_no
             )
-            parent = result_parent.scalar_one_or_none()
-            if parent and parent.mobile:
-                student_name = f"{student.first_name} {student.last_name}"
-                amount_str = f"Rs. {amount_paid:,.2f}"
+        )
+                    
+        return {"success": True, "receipt_number": receipt_no, "status": "processed"}
+
+    async def _notify_payment_success(self, student_id: UUID, amount_paid: float, receipt_number: str):
+        try:
+            # Check settings first
+            site_res = await self.repo.db.execute(
+                select(CMSSite).where(CMSSite.deleted_at.is_(None)).limit(1)
+            )
+            site = site_res.scalar_one_or_none()
+            whatsapp_enabled = True
+            if site and site.settings:
+                whatsapp_enabled = site.settings.get("whatsapp_payment_enabled", True)
                 
-                try:
+            if not whatsapp_enabled:
+                logger.info("WhatsApp fee payment notifications are disabled in settings.")
+                return
+
+            result_student = await self.repo.db.execute(
+                select(Student)
+                .where(Student.id == student_id, Student.deleted_at.is_(None))
+            )
+            student = result_student.scalar_one_or_none()
+            if student:
+                result_parent = await self.repo.db.execute(
+                    select(StudentParent)
+                    .where(
+                        StudentParent.student_id == student_id,
+                        StudentParent.parent_type.in_(["father", "guardian"]),
+                        StudentParent.deleted_at.is_(None)
+                    )
+                    .limit(1)
+                )
+                parent = result_parent.scalar_one_or_none()
+                if parent and parent.mobile:
+                    student_name = f"{student.first_name} {student.last_name}"
+                    amount_str = f"Rs. {amount_paid:,.2f}"
+                    
                     from app.core.config import settings
+                    from app.utils.whatsapp import whatsapp_client
                     template_name = settings.WHATSAPP_PAYMENT_SUCCESS_TEMPLATE or "jaspers_market_order_confirmation_v1"
                     
                     if template_name == "jaspers_market_order_confirmation_v1":
                         body_params = [
                             student_name,
                             f"Payment Success: {amount_str}",
-                            date.today().strftime("%b %d, %Y")
+                            f"Receipt No: {receipt_number}"
                         ]
                     else:
                         body_params = [student_name, amount_str]
@@ -585,10 +622,8 @@ class FeesService:
                         language_code="en_US" if template_name == "jaspers_market_order_confirmation_v1" else "en",
                         body_parameters=body_params
                     )
-                except Exception as ex:
-                    logger.error(f"Failed to dispatch payment success WhatsApp alert: {str(ex)}")
-                    
-        return {"success": True, "receipt_number": receipt_no, "status": "processed"}
+        except Exception as e:
+            logger.error(f"Failed to dispatch payment success WhatsApp alert: {str(e)}")
 
     async def get_fees_analytics(self) -> dict:
         summary = await self.repo.get_ledger_summary()

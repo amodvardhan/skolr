@@ -12,12 +12,15 @@ import {
   Send,
   Users,
   UserCheck,
-  CheckCircle,
+  Settings,
+  Sparkles,
 } from 'lucide-react';
 
 import { notificationsApi } from '../api/notificationsApi';
 import { studentApi } from '../../students/api/studentApi';
 import { CustomSelect } from '../../../components/CustomSelect';
+import { cmsApi } from '../../cms/api/cmsApi';
+import { toast } from '../../../stores/useToastStore';
 
 // Validation Schema for Creating a Template
 const templateSchema = z.object({
@@ -40,6 +43,25 @@ const getTemplateVariablesCount = (bodyFormat: string): number => {
   return Math.max(...indexes, 0);
 };
 
+function ToggleSwitch({ checked, onChange, disabled }: { checked: boolean; onChange: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      disabled={disabled}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 ${
+        checked ? 'bg-primary' : 'bg-neutral-200'
+      }`}
+    >
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+          checked ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
+  );
+}
+
 export function AnnouncementsPage() {
   const queryClient = useQueryClient();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
@@ -47,8 +69,9 @@ export function AnnouncementsPage() {
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [customPhonesRaw, setCustomPhonesRaw] = useState<string>('');
   const [templateVariables, setTemplateVariables] = useState<string[]>([]);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Tabs state
+  const [activeTab, setActiveTab] = useState<'broadcast' | 'automated'>('broadcast');
 
   // Queries
   const { data: templatesRes, isLoading: templatesLoading } = useQuery({
@@ -60,6 +83,38 @@ export function AnnouncementsPage() {
     queryKey: ['classes-master'],
     queryFn: studentApi.classes,
   });
+
+  const { data: siteRes, isLoading: siteLoading } = useQuery({
+    queryKey: ['cms-site'],
+    queryFn: cmsApi.getSite,
+  });
+
+  const site = siteRes?.data;
+  const siteSettings = site?.settings || {};
+
+  const toggleSettingMutation = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: boolean }) => {
+      if (!site) return;
+      const updatedSettings = {
+        ...siteSettings,
+        [key]: value
+      };
+      return await cmsApi.updateSite({
+        settings: updatedSettings
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cms-site'] });
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to update alert trigger setting.');
+    }
+  });
+
+  const handleToggle = (key: string, currentValue: boolean) => {
+    toggleSettingMutation.mutate({ key, value: !currentValue });
+  };
 
   const templates = templatesRes?.data || [];
   const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
@@ -87,18 +142,16 @@ export function AnnouncementsPage() {
     setTemplateVariables(Array(variablesCount).fill(''));
   }, [variablesCount, selectedTemplateId]);
 
-  // Mutations
   const createTemplateMutation = useMutation({
     mutationFn: notificationsApi.createTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-templates'] });
       resetTemplateForm();
-      setErrorMsg(null);
-      alert('Notification template created successfully!');
+      toast.success('Notification template created successfully!');
     },
     onError: (err: any) => {
       console.error(err);
-      setErrorMsg(err.response?.data?.detail || 'Failed to create notification template.');
+      toast.error(err.response?.data?.detail || 'Failed to create notification template.');
     }
   });
 
@@ -107,36 +160,31 @@ export function AnnouncementsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-templates'] });
       if (selectedTemplateId) setSelectedTemplateId('');
-      alert('Template deleted.');
+      toast.success('Template deleted.');
     },
     onError: (err: any) => {
       console.error(err);
-      alert(err.response?.data?.detail || 'Failed to delete template.');
+      toast.error(err.response?.data?.detail || 'Failed to delete template.');
     }
   });
 
   const broadcastMutation = useMutation({
     mutationFn: notificationsApi.triggerBroadcast,
     onSuccess: (res) => {
-      setSuccessMsg(res.message || 'Broadcast has been triggered successfully in the background.');
-      setErrorMsg(null);
+      toast.success(res.message || 'Broadcast has been triggered successfully in the background.');
       // Reset broadcast states
       setCustomPhonesRaw('');
       setTemplateVariables([]);
       setSelectedTemplateId('');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     onError: (err: any) => {
       console.error(err);
-      setErrorMsg(err.response?.data?.detail || 'Failed to trigger broadcast.');
-      setSuccessMsg(null);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast.error(err.response?.data?.detail || 'Failed to trigger broadcast.');
     }
   });
 
   // Action handlers
   const onCreateTemplate = (values: TemplateFormValues) => {
-    setErrorMsg(null);
     createTemplateMutation.mutate(values);
   };
 
@@ -154,25 +202,25 @@ export function AnnouncementsPage() {
 
   const handleBroadcast = () => {
     if (!selectedTemplateId) {
-      alert('Please select a message template.');
+      toast.warning('Please select a message template.');
       return;
     }
 
     // Verify all variables are filled
     if (templateVariables.some(v => v.trim() === '')) {
-      alert('Please fill in all template placeholders.');
+      toast.warning('Please fill in all template placeholders.');
       return;
     }
 
     if (targetType === 'class' && !selectedClassId) {
-      alert('Please select a target class.');
+      toast.warning('Please select a target class.');
       return;
     }
 
     let customPhones: string[] | undefined = undefined;
     if (targetType === 'individual') {
       if (!customPhonesRaw.trim()) {
-        alert('Please input at least one phone number.');
+        toast.warning('Please input at least one phone number.');
         return;
       }
       customPhones = customPhonesRaw
@@ -180,9 +228,6 @@ export function AnnouncementsPage() {
         .map(p => p.trim())
         .filter(p => p.length > 0);
     }
-
-    setErrorMsg(null);
-    setSuccessMsg(null);
 
     broadcastMutation.mutate({
       template_id: selectedTemplateId,
@@ -219,28 +264,37 @@ export function AnnouncementsPage() {
         </div>
       </div>
 
-      {/* Notifications Alerts */}
-      {successMsg && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl flex items-start gap-3 text-sm animate-fadeIn">
-          <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-bold">Broadcast Queued</h4>
-            <p className="text-xs mt-0.5">{successMsg}</p>
-          </div>
-        </div>
-      )}
+      {/* Tab Navigation */}
+      <div className="flex border-b border-neutral-200 gap-6">
+        <button
+          onClick={() => setActiveTab('broadcast')}
+          className={`pb-3 text-sm font-bold border-b-2 px-1 transition duration-150 uppercase tracking-wider font-display ${
+            activeTab === 'broadcast'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-neutral-450 hover:text-neutral-600'
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <MessageSquare className="h-4 w-4" /> Broadcast Announcements
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('automated')}
+          className={`pb-3 text-sm font-bold border-b-2 px-1 transition duration-150 uppercase tracking-wider font-display ${
+            activeTab === 'automated'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-neutral-450 hover:text-neutral-600'
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <Settings className="h-4 w-4" /> Automated Event Alerts
+          </span>
+        </button>
+      </div>
 
-      {errorMsg && (
-        <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl flex items-start gap-3 text-sm animate-fadeIn">
-          <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-bold">Error</h4>
-            <p className="text-xs mt-0.5">{errorMsg}</p>
-          </div>
-        </div>
-      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {activeTab === 'broadcast' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Templates Panel (1 Col) */}
         <div className="lg:col-span-1 space-y-6">
           {/* Create Template */}
@@ -525,6 +579,126 @@ export function AnnouncementsPage() {
           </div>
         </div>
       </div>
+      )}
+
+      {activeTab === 'automated' && (
+        <div className="space-y-6 max-w-4xl mx-auto">
+          <div className="card space-y-4">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-amber-500" />
+                  Automated Event Alerts
+                </h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Configure automated WhatsApp notifications triggered directly by school ERP actions.
+                </p>
+              </div>
+            </div>
+
+            {siteLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              </div>
+            ) : (
+              <div className="divide-y divide-neutral-100">
+                {/* Admission Trigger */}
+                <div className="py-5 flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-blue-500" />
+                      <h4 className="text-sm font-bold text-neutral-900">Student Admission Alert</h4>
+                    </div>
+                    <p className="text-xs text-neutral-500 max-w-xl">
+                      Automatically sends a WhatsApp template confirmation to the primary parent's mobile contact when a new student admission is confirmed.
+                    </p>
+                    <div className="mt-2 text-[11px] text-neutral-400 bg-neutral-50 p-2.5 rounded-lg border border-neutral-100 max-w-lg">
+                      <span className="font-semibold text-neutral-600 block mb-1">Default Template Placeholders:</span>
+                      <ul className="list-disc pl-4 space-y-0.5 font-mono text-[10px]">
+                        <li><span className="text-neutral-500">{"{{1}}"}</span> - Student Name</li>
+                        <li><span className="text-neutral-500">{"{{2}}"}</span> - "New Student Admission" title</li>
+                        <li><span className="text-neutral-500">{"{{3}}"}</span> - Admission Number</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-start md:self-center">
+                    {toggleSettingMutation.isPending && (
+                      <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" />
+                    )}
+                    <ToggleSwitch
+                      checked={siteSettings.whatsapp_admission_enabled !== false}
+                      onChange={() => handleToggle('whatsapp_admission_enabled', siteSettings.whatsapp_admission_enabled !== false)}
+                      disabled={toggleSettingMutation.isPending}
+                    />
+                  </div>
+                </div>
+
+                {/* Fees Payment Trigger */}
+                <div className="py-5 flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <h4 className="text-sm font-bold text-neutral-900">Fee Payment Collection Alert</h4>
+                    </div>
+                    <p className="text-xs text-neutral-500 max-w-xl">
+                      Sends an instant payment receipt template confirmation to parents upon manual collections or Razorpay webhook resolution.
+                    </p>
+                    <div className="mt-2 text-[11px] text-neutral-400 bg-neutral-50 p-2.5 rounded-lg border border-neutral-100 max-w-lg">
+                      <span className="font-semibold text-neutral-600 block mb-1">Default Template Placeholders:</span>
+                      <ul className="list-disc pl-4 space-y-0.5 font-mono text-[10px]">
+                        <li><span className="text-neutral-500">{"{{1}}"}</span> - Student Name</li>
+                        <li><span className="text-neutral-500">{"{{2}}"}</span> - Payment Amount status</li>
+                        <li><span className="text-neutral-500">{"{{3}}"}</span> - Receipt Number</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-start md:self-center">
+                    {toggleSettingMutation.isPending && (
+                      <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" />
+                    )}
+                    <ToggleSwitch
+                      checked={siteSettings.whatsapp_payment_enabled !== false}
+                      onChange={() => handleToggle('whatsapp_payment_enabled', siteSettings.whatsapp_payment_enabled !== false)}
+                      disabled={toggleSettingMutation.isPending}
+                    />
+                  </div>
+                </div>
+
+                {/* Attendance Trigger */}
+                <div className="py-5 flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-orange-500" />
+                      <h4 className="text-sm font-bold text-neutral-900">Student Absenteeism Alert</h4>
+                    </div>
+                    <p className="text-xs text-neutral-500 max-w-xl">
+                      Triggers a daily WhatsApp alert to parent mobile contacts when a student is recorded absent during class roll call.
+                    </p>
+                    <div className="mt-2 text-[11px] text-neutral-400 bg-neutral-50 p-2.5 rounded-lg border border-neutral-100 max-w-lg">
+                      <span className="font-semibold text-neutral-600 block mb-1">Default Template Placeholders:</span>
+                      <ul className="list-disc pl-4 space-y-0.5 font-mono text-[10px]">
+                        <li><span className="text-neutral-500">{"{{1}}"}</span> - Student Name</li>
+                        <li><span className="text-neutral-500">{"{{2}}"}</span> - "Absent Notification" title</li>
+                        <li><span className="text-neutral-500">{"{{3}}"}</span> - Attendance Date</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-start md:self-center">
+                    {toggleSettingMutation.isPending && (
+                      <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" />
+                    )}
+                    <ToggleSwitch
+                      checked={siteSettings.whatsapp_attendance_enabled !== false}
+                      onChange={() => handleToggle('whatsapp_attendance_enabled', siteSettings.whatsapp_attendance_enabled !== false)}
+                      disabled={toggleSettingMutation.isPending}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

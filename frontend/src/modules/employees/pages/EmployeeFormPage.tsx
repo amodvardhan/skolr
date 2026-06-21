@@ -7,6 +7,7 @@ import { ArrowLeft, Save, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
 
 import { employeesApi, EmployeeCreateData } from '../api/employeesApi';
 import { CustomSelect } from '../../../components/CustomSelect';
+import { DatePicker } from '../../../components/DatePicker';
 
 const employeeSchema = z.object({
   employee_code: z.string().min(2, "Code is too short (min 2 chars)").max(20),
@@ -200,10 +201,15 @@ export function EmployeeFormPage({ onCancel, onSuccess }: EmployeeFormPageProps)
               <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 Date of Joining <span className="text-red-500">*</span>
               </label>
-              <input
-                type="date"
-                {...register('date_of_joining')}
-                className="input-field"
+              <Controller
+                control={control}
+                name="date_of_joining"
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               {errors.date_of_joining && (
                 <p className="text-red-500 text-xs mt-1">{errors.date_of_joining.message}</p>
