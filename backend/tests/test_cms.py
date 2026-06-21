@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import traceback
+import pytest
 from uuid import UUID
 from sqlalchemy import select, text
 
@@ -17,6 +18,7 @@ from app.schemas.cms import CMSSiteUpdate, CMSPageCreate, CMSPageUpdate
 
 DEFAULT_SCHOOL_ID = "11111111-1111-1111-1111-111111111111"
 
+@pytest.mark.asyncio
 async def test_cms_flow():
     print("Starting CMS & Website Builder integration test...")
     async with AsyncSessionLocal() as db:

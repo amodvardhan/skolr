@@ -5,8 +5,9 @@ from datetime import datetime
 from typing import List, Dict, Any, Tuple, Optional
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy import select, text
+from sqlalchemy.orm import selectinload
 
-from app.models.tenant import CMSSite, CMSPage, Employee, FeeStructure, FeeStructureItem
+from app.models.tenant import CMSSite, CMSPage, Employee, FeeStructure, FeeStructureItem, CMSInquiry
 from app.repositories.cms import CMSRepository
 from app.schemas.cms import CMSSiteUpdate, CMSPageCreate, CMSPageUpdate, CMSInquiryCreate
 
@@ -249,13 +250,14 @@ class CMSService:
 
     async def ensure_inquiries_table(self):
         try:
+            # 1. Create table with initial columns if not exists
             await self.repo.db.execute(text("""
                 CREATE TABLE IF NOT EXISTS cms_inquiries (
                     id UUID PRIMARY KEY,
                     name VARCHAR(100) NOT NULL,
                     email VARCHAR(100) NOT NULL,
                     message VARCHAR(1000) NOT NULL,
-                    status VARCHAR(20) DEFAULT 'new' NOT NULL,
+                    status VARCHAR(30) DEFAULT 'new' NOT NULL,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
                     deleted_at TIMESTAMP WITH TIME ZONE
@@ -263,7 +265,29 @@ class CMSService:
             """))
             await self.repo.db.commit()
         except Exception:
-            pass
+            await self.repo.db.rollback()
+
+        # Add each new column individually, catching errors so it works on any DB (Postgres/SQLite)
+        cols = [
+            ("phone", "VARCHAR(20) NULL"),
+            ("student_name", "VARCHAR(100) NULL"),
+            ("student_dob", "DATE NULL"),
+            ("target_class_id", "UUID REFERENCES classes(id) ON DELETE SET NULL"),
+            ("follow_up_notes", "JSONB DEFAULT '[]'::jsonb NOT NULL")
+        ]
+        for col_name, col_def in cols:
+            try:
+                await self.repo.db.execute(text(f"ALTER TABLE cms_inquiries ADD COLUMN {col_name} {col_def}"))
+                await self.repo.db.commit()
+            except Exception:
+                await self.repo.db.rollback()
+
+        # Alter status column type to support length 30
+        try:
+            await self.repo.db.execute(text("ALTER TABLE cms_inquiries ALTER COLUMN status TYPE VARCHAR(30)"))
+            await self.repo.db.commit()
+        except Exception:
+            await self.repo.db.rollback()
 
     async def get_site(self) -> CMSSite:
         # Self-heal database schema if inquiries table is missing
@@ -509,87 +533,133 @@ class CMSService:
         public_url = f"/published/{str(school_id)}/index.html"
         return True, public_url
 
-    async def create_inquiry(self, data: CMSInquiryCreate) -> Any:
+    async def create_inquiry(self, data: CMSInquiryCreate) -> CMSInquiry:
         # Self-heal table schema if missing
         await self.ensure_inquiries_table()
-        import uuid
-        inquiry_id = uuid.uuid4()
-        now = datetime.utcnow()
-        await self.repo.db.execute(text("""
-            INSERT INTO cms_inquiries (id, name, email, message, status, created_at, updated_at)
-            VALUES (:id, :name, :email, :message, :status, :created_at, :updated_at)
-        """), {
-            "id": inquiry_id,
-            "name": data.name,
-            "email": data.email,
-            "message": data.message,
-            "status": "new",
-            "created_at": now,
-            "updated_at": now
-        })
+        inquiry = CMSInquiry(
+            name=data.name,
+            email=data.email,
+            message=data.message,
+            phone=data.phone,
+            student_name=data.student_name,
+            student_dob=data.student_dob,
+            target_class_id=data.target_class_id,
+            status="new",
+            follow_up_notes=[]
+        )
+        self.repo.db.add(inquiry)
         await self.repo.db.commit()
-        
-        class MockInquiry:
-            def __init__(self, id, name, email, message, status, created_at):
-                self.id = id
-                self.name = name
-                self.email = email
-                self.message = message
-                self.status = status
-                self.created_at = created_at
-        return MockInquiry(inquiry_id, data.name, data.email, data.message, "new", now)
+        await self.repo.db.refresh(inquiry)
+        return inquiry
 
-    async def list_inquiries(self) -> List[Any]:
+    async def list_inquiries(self) -> List[CMSInquiry]:
         await self.ensure_inquiries_table()
-        result = await self.repo.db.execute(text("""
-            SELECT id, name, email, message, status, created_at
-            FROM cms_inquiries
-            WHERE deleted_at IS NULL
-            ORDER BY created_at DESC
-        """))
-        rows = result.fetchall()
-        
-        class MockInquiry:
-            def __init__(self, id, name, email, message, status, created_at):
-                self.id = id
-                self.name = name
-                self.email = email
-                self.message = message
-                self.status = status
-                self.created_at = created_at
-                
-        return [MockInquiry(r.id, r.name, r.email, r.message, r.status, r.created_at) for r in rows]
+        result = await self.repo.db.execute(
+            select(CMSInquiry)
+            .where(CMSInquiry.deleted_at.is_(None))
+            .options(selectinload(CMSInquiry.target_class))
+            .order_by(CMSInquiry.created_at.desc())
+        )
+        return list(result.scalars().all())
 
-    async def update_inquiry_status(self, inquiry_id: UUID, status: str) -> Optional[Any]:
+    async def update_inquiry_status(self, inquiry_id: UUID, status: str) -> Optional[CMSInquiry]:
         await self.ensure_inquiries_table()
-        result = await self.repo.db.execute(text("""
-            SELECT id, name, email, message, status, created_at
-            FROM cms_inquiries
-            WHERE id = :id AND deleted_at IS NULL
-        """), {"id": inquiry_id})
-        row = result.fetchone()
-        if not row:
+        result = await self.repo.db.execute(
+            select(CMSInquiry)
+            .where(CMSInquiry.id == inquiry_id, CMSInquiry.deleted_at.is_(None))
+            .options(selectinload(CMSInquiry.target_class))
+        )
+        inquiry = result.scalar_one_or_none()
+        if not inquiry:
             return None
             
-        now = datetime.utcnow()
-        await self.repo.db.execute(text("""
-            UPDATE cms_inquiries
-            SET status = :status, updated_at = :updated_at
-            WHERE id = :id
-        """), {
-            "id": inquiry_id,
-            "status": status,
-            "updated_at": now
-        })
+        inquiry.status = status
+        inquiry.updated_at = datetime.utcnow()
         await self.repo.db.commit()
-        
-        class MockInquiry:
-            def __init__(self, id, name, email, message, status, created_at):
-                self.id = id
-                self.name = name
-                self.email = email
-                self.message = message
-                self.status = status
-                self.created_at = created_at
-                
-        return MockInquiry(inquiry_id, row.name, row.email, row.message, status, row.created_at)
+        await self.repo.db.refresh(inquiry)
+        return inquiry
+
+    async def add_follow_up_note(self, inquiry_id: UUID, note_text: str, author: str) -> Optional[CMSInquiry]:
+        await self.ensure_inquiries_table()
+        import uuid
+        result = await self.repo.db.execute(
+            select(CMSInquiry)
+            .where(CMSInquiry.id == inquiry_id, CMSInquiry.deleted_at.is_(None))
+            .options(selectinload(CMSInquiry.target_class))
+        )
+        inquiry = result.scalar_one_or_none()
+        if not inquiry:
+            return None
+            
+        # Copy to trigger SQLAlchemy update detection for JSONB
+        notes = list(inquiry.follow_up_notes or [])
+        notes.append({
+            "id": str(uuid.uuid4()),
+            "note": note_text,
+            "author": author,
+            "created_at": datetime.utcnow().isoformat()
+        })
+        inquiry.follow_up_notes = notes
+        inquiry.updated_at = datetime.utcnow()
+        await self.repo.db.commit()
+        await self.repo.db.refresh(inquiry)
+        return inquiry
+
+    async def convert_inquiry_to_admission(self, inquiry_id: UUID) -> Optional[Dict[str, Any]]:
+        await self.ensure_inquiries_table()
+        result = await self.repo.db.execute(
+            select(CMSInquiry)
+            .where(CMSInquiry.id == inquiry_id, CMSInquiry.deleted_at.is_(None))
+            .options(selectinload(CMSInquiry.target_class))
+        )
+        inquiry = result.scalar_one_or_none()
+        if not inquiry:
+            return None
+
+        # Update status to admitted and log follow-up note
+        inquiry.status = "admitted"
+        import uuid
+        notes = list(inquiry.follow_up_notes or [])
+        notes.append({
+            "id": str(uuid.uuid4()),
+            "note": "Converted lead to ERP Admission profile.",
+            "author": "System",
+            "created_at": datetime.utcnow().isoformat()
+        })
+        inquiry.follow_up_notes = notes
+        inquiry.updated_at = datetime.utcnow()
+        await self.repo.db.commit()
+        await self.repo.db.refresh(inquiry)
+
+        # Parse parent name
+        p_name = inquiry.name or ""
+        p_parts = p_name.strip().split(None, 1)
+        p_first = p_parts[0] if p_parts else "Parent"
+        p_last = p_parts[1] if len(p_parts) > 1 else ""
+
+        # Parse student name
+        s_name = inquiry.student_name or ""
+        s_parts = s_name.strip().split(None, 1)
+        s_first = s_parts[0] if s_parts else "Student"
+        s_last = s_parts[1] if len(s_parts) > 1 else ""
+
+        from datetime import date
+        prefill_data = {
+            "first_name": s_first,
+            "last_name": s_last,
+            "date_of_birth": inquiry.student_dob.isoformat() if inquiry.student_dob else None,
+            "gender": "M",
+            "admission_date": date.today().isoformat(),
+            "class_id": str(inquiry.target_class_id) if inquiry.target_class_id else None,
+            "parents": [
+                {
+                    "parent_type": "guardian",
+                    "first_name": p_first,
+                    "last_name": p_last,
+                    "mobile": inquiry.phone or "",
+                    "email": inquiry.email,
+                    "occupation": ""
+                }
+            ]
+        }
+        return prefill_data

@@ -12,7 +12,7 @@ class StudentService:
     def __init__(self, repo: StudentRepository):
         self.repo = repo
 
-    async def admit_student(self, data: StudentCreate) -> Student:
+    async def admit_student(self, data: StudentCreate, school_id: Optional[UUID] = None) -> Student:
         # 1. Verify class allocation exists
         class_result = await self.repo.db.execute(
             select(Class).where(Class.id == data.class_id, Class.deleted_at.is_(None))
@@ -81,16 +81,43 @@ class StudentService:
             status="active"
         )
 
-        # 5. Add parent records
+        # 5. Add parent records and auto-provision users
         db_parents = []
         for p in data.parents:
+            parent_user_id = None
+            if p.email:
+                from app.models.public import User
+                from app.core.security import get_password_hash
+                
+                # Check if parent user already exists in public users
+                user_res = await self.repo.db.execute(
+                    select(User).where(User.email == p.email.strip().lower())
+                )
+                existing_user = user_res.scalar_one_or_none()
+                if existing_user:
+                    parent_user_id = existing_user.id
+                else:
+                    new_user = User(
+                        email=p.email.strip().lower(),
+                        hashed_password=get_password_hash("parent123"),
+                        first_name=p.first_name,
+                        last_name=p.last_name,
+                        role="parent",
+                        school_id=school_id,
+                        is_active=True
+                    )
+                    self.repo.db.add(new_user)
+                    await self.repo.db.flush()
+                    parent_user_id = new_user.id
+
             parent = StudentParent(
                 parent_type=p.parent_type,
                 first_name=p.first_name,
                 last_name=p.last_name,
                 mobile=p.mobile,
                 email=p.email,
-                occupation=p.occupation
+                occupation=p.occupation,
+                user_id=parent_user_id
             )
             db_parents.append(parent)
         

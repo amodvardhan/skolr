@@ -88,7 +88,7 @@ async def admit_student(
 ):
     repo = StudentRepository(db)
     service = StudentService(repo)
-    student = await service.admit_student(student_data)
+    student = await service.admit_student(student_data, school_id=current_user.school_id)
     
     return StudentResponse(
         data=student,

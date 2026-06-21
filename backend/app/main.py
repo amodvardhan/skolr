@@ -8,7 +8,7 @@ import logging
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.middleware import TenantLoggingMiddleware
-from app.routers import auth, tenants, students, attendance, fees, dashboard, employee, academics, exams, notifications, cbse, cms
+from app.routers import auth, tenants, students, attendance, fees, dashboard, employee, academics, exams, notifications, cbse, cms, parent
 
 # Setup logger
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +55,7 @@ app.include_router(exams.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(cbse.router, prefix="/api/v1")
 app.include_router(cms.router, prefix="/api/v1")
+app.include_router(parent.router, prefix="/api/v1")
 
 # Mount Static Files for Published School Websites
 from fastapi.staticfiles import StaticFiles

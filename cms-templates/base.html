@@ -444,18 +444,48 @@
                 
                 <div class="contact-form">
                   <div class="form-group">
+                    <label>Inquiry Type</label>
+                    <select id="inquiry-type" class="form-control" style="background-color: var(--bg); color: var(--neutral); border: 1px solid rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 6px; width: 100%;">
+                      <option value="general">General Inquiry</option>
+                      <option value="admissions">Admissions Lead</option>
+                    </select>
+                  </div>
+                  <div class="form-group" style="margin-top: 12px;">
                     <label>Full Name</label>
                     <input type="text" id="inquiry-name" class="form-control" placeholder="Enter your name">
                   </div>
-                  <div class="form-group">
+                  <div class="form-group" style="margin-top: 12px;">
                     <label>Email Address</label>
                     <input type="email" id="inquiry-email" class="form-control" placeholder="Enter your email">
                   </div>
-                  <div class="form-group">
+                  <div class="form-group" style="margin-top: 12px;">
+                    <label>Phone / Mobile</label>
+                    <input type="text" id="inquiry-phone" class="form-control" placeholder="Enter your phone number">
+                  </div>
+                  
+                  <!-- Conditional Admissions Fields -->
+                  <div id="admissions-fields" style="display: none; border-top: 1px dashed rgba(0,0,0,0.15); margin-top: 16px; padding-top: 16px;">
+                    <div class="form-group">
+                      <label>Child's Full Name</label>
+                      <input type="text" id="inquiry-student-name" class="form-control" placeholder="Enter child's name">
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                      <label>Child's Date of Birth</label>
+                      <input type="date" id="inquiry-student-dob" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                      <label>Target Grade / Class</label>
+                      <select id="inquiry-target-class" class="form-control" style="background-color: var(--bg); color: var(--neutral); border: 1px solid rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 6px; width: 100%;">
+                        <option value="">Select Target Class</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-top: 16px;">
                     <label>Your Inquiry Message</label>
                     <textarea id="inquiry-message" class="form-control" rows="4" placeholder="How can we help you?"></textarea>
                   </div>
-                  <button id="inquiry-submit-btn" class="btn btn-primary" style="width: 100%;">Submit Inquiry</button>
+                  <button id="inquiry-submit-btn" class="btn btn-primary" style="width: 100%; margin-top: 12px;">Submit Inquiry</button>
                 </div>
               </div>
             </div>
@@ -589,6 +619,43 @@
       });
     }
 
+    // Show/hide admissions fields dynamically
+    document.body.addEventListener('change', function(e) {
+      const typeSelect = e.target.closest('#inquiry-type');
+      if (!typeSelect) return;
+      
+      const formEl = typeSelect.closest('.contact-form');
+      if (!formEl) return;
+      
+      const admissionsFields = formEl.querySelector('#admissions-fields');
+      const classSelect = formEl.querySelector('#inquiry-target-class');
+      
+      if (typeSelect.value === 'admissions') {
+        if (admissionsFields) admissionsFields.style.display = 'block';
+        
+        // Fetch classes dynamically if not already populated
+        if (classSelect && classSelect.options.length <= 1) {
+          fetch(`/api/v1/cms/classes?school_id={{ school_id }}`)
+            .then(res => res.json())
+            .then(resData => {
+              if (resData && resData.success && Array.isArray(resData.data)) {
+                // Clear existing options except first
+                classSelect.innerHTML = '<option value="">Select Target Class</option>';
+                resData.data.forEach(cls => {
+                  const opt = document.createElement('option');
+                  opt.value = cls.id;
+                  opt.innerText = `${cls.name} - ${cls.section}`;
+                  classSelect.appendChild(opt);
+                });
+              }
+            })
+            .catch(err => console.error("Failed to load school classes:", err));
+        }
+      } else {
+        if (admissionsFields) admissionsFields.style.display = 'none';
+      }
+    });
+
     // Inquiry form submit
     document.body.addEventListener('click', function(e) {
       const btn = e.target.closest('#inquiry-submit-btn');
@@ -597,8 +664,13 @@
       const formEl = btn.closest('.contact-form');
       if (!formEl) return;
       
+      const typeSelect = formEl.querySelector('#inquiry-type');
       const nameInput = formEl.querySelector('#inquiry-name');
       const emailInput = formEl.querySelector('#inquiry-email');
+      const phoneInput = formEl.querySelector('#inquiry-phone');
+      const studentNameInput = formEl.querySelector('#inquiry-student-name');
+      const studentDobInput = formEl.querySelector('#inquiry-student-dob');
+      const targetClassInput = formEl.querySelector('#inquiry-target-class');
       const msgInput = formEl.querySelector('#inquiry-message');
       
       if (!nameInput || !emailInput || !msgInput) return;
@@ -606,10 +678,28 @@
       const name = nameInput.value.trim();
       const email = emailInput.value.trim();
       const message = msgInput.value.trim();
+      const phone = phoneInput ? phoneInput.value.trim() : null;
       
       if (!name || !email || !message) {
         alert("Please fill in all fields.");
         return;
+      }
+      
+      let payload = { name, email, message, phone };
+      
+      if (typeSelect && typeSelect.value === 'admissions') {
+        const student_name = studentNameInput ? studentNameInput.value.trim() : null;
+        const student_dob = studentDobInput ? studentDobInput.value : null;
+        const target_class_id = targetClassInput ? targetClassInput.value : null;
+        
+        if (!student_name || !student_dob || !target_class_id) {
+          alert("Please fill in all student admission fields.");
+          return;
+        }
+        
+        payload.student_name = student_name;
+        payload.student_dob = student_dob;
+        payload.target_class_id = target_class_id;
       }
       
       btn.disabled = true;
@@ -620,7 +710,7 @@
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, email, message })
+        body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {

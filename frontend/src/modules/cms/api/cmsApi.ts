@@ -63,8 +63,20 @@ export interface CMSInquiry {
   name: string;
   email: string;
   message: string;
-  status: 'new' | 'read' | 'resolved';
+  status: 'new' | 'contacted' | 'visit_scheduled' | 'applied' | 'admitted' | 'archived' | 'read' | 'resolved';
+  phone?: string;
+  student_name?: string;
+  student_dob?: string;
+  target_class_id?: string;
+  follow_up_notes: Array<{
+    id: string;
+    note: string;
+    author: string;
+    created_at: string;
+  }>;
+  target_class_name?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface CMSInquiryResponse {
@@ -137,6 +149,16 @@ export const cmsApi = {
 
   updateInquiryStatus: async (inquiryId: string, status: string): Promise<CMSInquiryResponse> => {
     const response = await api.patch(`/cms/inquiries/${inquiryId}/status?status_val=${status}`);
+    return response.data;
+  },
+
+  addInquiryNote: async (inquiryId: string, data: { note: string; author: string }): Promise<CMSInquiryResponse> => {
+    const response = await api.post(`/cms/inquiries/${inquiryId}/notes`, data);
+    return response.data;
+  },
+
+  convertInquiryToAdmission: async (inquiryId: string): Promise<{ success: boolean; data: any; message: string }> => {
+    const response = await api.post(`/cms/inquiries/${inquiryId}/admit`);
     return response.data;
   },
 

@@ -43,6 +43,39 @@ async def list_exams(
     exams = await service.list_exams(academic_year_id)
     return ExamListResponse(success=True, data=exams, message="OK")
 
+# --- Grade Scales ---
+@router.get("/grade-scales", response_model=GradeScaleListResponse)
+async def list_grade_scales(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(["school_admin", "teacher"]))
+):
+    repo = ExamsRepository(db)
+    service = ExamsService(repo)
+    scales = await service.list_grade_scales()
+    return GradeScaleListResponse(success=True, data=scales, message="OK")
+
+@router.post("/grade-scales", response_model=GradeScaleResponse, status_code=status.HTTP_201_CREATED)
+async def create_grade_scale(
+    data: GradeScaleCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(["school_admin"]))
+):
+    repo = ExamsRepository(db)
+    service = ExamsService(repo)
+    scale = await service.create_grade_scale(data)
+    return GradeScaleResponse(success=True, data=scale, message="Grade scale created successfully.")
+
+@router.delete("/grade-scales/{scale_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_grade_scale(
+    scale_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(["school_admin"]))
+):
+    repo = ExamsRepository(db)
+    service = ExamsService(repo)
+    await service.delete_grade_scale(scale_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 @router.get("/{exam_id}", response_model=ExamResponse)
 async def get_exam(
     exam_id: UUID,
@@ -169,39 +202,6 @@ async def save_marks_ledger(
     service = ExamsService(repo)
     await service.save_marks_ledger(sched_id, data.marks)
     return {"success": True, "message": "Marks updated successfully."}
-
-# --- Grade Scales ---
-@router.get("/grade-scales", response_model=GradeScaleListResponse)
-async def list_grade_scales(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_roles(["school_admin", "teacher"]))
-):
-    repo = ExamsRepository(db)
-    service = ExamsService(repo)
-    scales = await service.list_grade_scales()
-    return GradeScaleListResponse(success=True, data=scales, message="OK")
-
-@router.post("/grade-scales", response_model=GradeScaleResponse, status_code=status.HTTP_201_CREATED)
-async def create_grade_scale(
-    data: GradeScaleCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_roles(["school_admin"]))
-):
-    repo = ExamsRepository(db)
-    service = ExamsService(repo)
-    scale = await service.create_grade_scale(data)
-    return GradeScaleResponse(success=True, data=scale, message="Grade scale created successfully.")
-
-@router.delete("/grade-scales/{scale_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_grade_scale(
-    scale_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_roles(["school_admin"]))
-):
-    repo = ExamsRepository(db)
-    service = ExamsService(repo)
-    await service.delete_grade_scale(scale_id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 # --- Report Cards ---
 @router.get("/student/{student_id}/report-card", response_class=Response)

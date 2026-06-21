@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { 
   GraduationCap, 
   LayoutDashboard, 
@@ -14,7 +14,8 @@ import {
   Contact,
   BookOpen,
   MessageSquare,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 
 import { SubjectConfigPage } from '../modules/academics/pages/SubjectConfigPage';
@@ -27,6 +28,7 @@ import { AnnouncementsPage } from '../modules/notifications/pages/AnnouncementsP
 import { NotificationLogsPage } from '../modules/notifications/pages/NotificationLogsPage';
 import { CBSECompliancePage } from '../modules/cbse/pages/CBSECompliancePage';
 import { CMSEditorPage } from '../modules/cms/pages/CMSEditorPage';
+import { AdmissionsCRMPage } from '../modules/cms/pages/AdmissionsCRMPage';
 
 
 import { useAuthStore } from '../stores/authStore';
@@ -49,6 +51,12 @@ import { EmployeeListPage } from '../modules/employees/pages/EmployeeListPage';
 import { EmployeeFormPage } from '../modules/employees/pages/EmployeeFormPage';
 import { EmployeeDetailPage } from '../modules/employees/pages/EmployeeDetailPage';
 
+import { ParentDashboardPage } from '../modules/parent/pages/ParentDashboardPage';
+import { ParentAttendancePage } from '../modules/parent/pages/ParentAttendancePage';
+import { ParentAcademicsPage } from '../modules/parent/pages/ParentAcademicsPage';
+import { ParentFeesPage } from '../modules/parent/pages/ParentFeesPage';
+import { parentApi } from '../modules/parent/api/parentApi';
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,10 +74,27 @@ function MainAppContent() {
   
   // Navigation tabs state is now managed globally
   const [authView, setAuthView] = useState<'login' | 'onboard'>('login');
+
+  // Parent sibling selection state
+  const [activeStudentId, setActiveStudentId] = useState<string>('');
+
+  // Fetch sibling details if role is parent
+  const { data: siblingRes } = useQuery({
+    queryKey: ['parent_siblings'],
+    queryFn: () => parentApi.getLinkedStudents(),
+    enabled: isAuthenticated && user?.role === 'parent',
+  });
+
+  useEffect(() => {
+    if (user?.role === 'parent' && siblingRes?.data && siblingRes.data.length > 0 && !activeStudentId) {
+      setActiveStudentId(siblingRes.data[0].id);
+    }
+  }, [siblingRes, user, activeStudentId]);
   
   // Student module inner navigation state
   const [studentView, setStudentView] = useState<'list' | 'form' | 'details'>('list');
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+  const [crmPrefillData, setCrmPrefillData] = useState<any>(null);
   
   // Attendance module inner navigation state
   const [attendanceView, setAttendanceView] = useState<'mark' | 'analytics'>('mark');
@@ -113,24 +138,76 @@ function MainAppContent() {
     return <LoginPage onGoToOnboard={() => setAuthView('onboard')} />;
   }
 
-  const navItems = [
-    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
-    { id: 'students', name: 'Students', icon: Users },
-    { id: 'attendance', name: 'Attendance', icon: CalendarCheck },
-    { id: 'fees', name: 'Fees Ledger', icon: IndianRupee },
-    { id: 'academics', name: 'Academics', icon: BookOpen },
-    { id: 'exams', name: 'Exams & Grades', icon: GraduationCap },
-    { id: 'notifications', name: 'Announcements', icon: MessageSquare },
-    { id: 'cbse', name: 'CBSE Compliance', icon: ShieldCheck },
-    { id: 'website', name: 'Website Builder', icon: Globe },
-    ...(user?.role === 'school_admin' ? [
+  const getNavItems = () => {
+    const role = user?.role;
+    if (role === 'parent') {
+      return [
+        { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+        { id: 'attendance', name: 'Attendance', icon: CalendarCheck },
+        { id: 'academics', name: 'Academics', icon: BookOpen },
+        { id: 'fees', name: 'Fees Ledger', icon: IndianRupee },
+      ];
+    }
+    if (role === 'accountant') {
+      return [
+        { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+        { id: 'students', name: 'Students', icon: Users },
+        { id: 'fees', name: 'Fees Ledger', icon: IndianRupee },
+      ];
+    }
+    if (role === 'teacher') {
+      return [
+        { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+        { id: 'students', name: 'Students', icon: Users },
+        { id: 'attendance', name: 'Attendance', icon: CalendarCheck },
+        { id: 'academics', name: 'Academics', icon: BookOpen },
+        { id: 'exams', name: 'Exams & Grades', icon: GraduationCap },
+        { id: 'notifications', name: 'Announcements', icon: MessageSquare },
+      ];
+    }
+    // Default / Admin full access
+    return [
+      { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+      { id: 'students', name: 'Students', icon: Users },
+      { id: 'attendance', name: 'Attendance', icon: CalendarCheck },
+      { id: 'fees', name: 'Fees Ledger', icon: IndianRupee },
+      { id: 'academics', name: 'Academics', icon: BookOpen },
+      { id: 'exams', name: 'Exams & Grades', icon: GraduationCap },
+      { id: 'notifications', name: 'Announcements', icon: MessageSquare },
+      { id: 'cbse', name: 'CBSE Compliance', icon: ShieldCheck },
+      { id: 'website', name: 'Website Builder', icon: Globe },
+      { id: 'admissions_crm', name: 'Admissions CRM', icon: Sparkles },
       { id: 'employees', name: 'Staff Directory', icon: Contact },
-      { id: 'settings', name: 'Settings', icon: Settings }
-    ] : []),
-  ];
+      { id: 'settings', name: 'Settings', icon: Settings },
+    ];
+  };
+
+  const navItems = getNavItems();
 
   // Helper to render body based on active tab
   const renderTabContent = () => {
+    // Enforce Tab RBAC: if the activeTab is not present in navItems list, fallback to dashboard
+    const isTabAllowed = navItems.some(item => item.id === activeTab);
+    if (!isTabAllowed) {
+      setTimeout(() => setActiveTab('dashboard'), 0);
+      return null;
+    }
+
+    if (user?.role === 'parent') {
+      switch (activeTab) {
+        case 'dashboard':
+          return <ParentDashboardPage studentId={activeStudentId} />;
+        case 'attendance':
+          return <ParentAttendancePage studentId={activeStudentId} />;
+        case 'academics':
+          return <ParentAcademicsPage studentId={activeStudentId} />;
+        case 'fees':
+          return <ParentFeesPage studentId={activeStudentId} />;
+        default:
+          return <ParentDashboardPage studentId={activeStudentId} />;
+      }
+    }
+
     switch (activeTab) {
       case 'dashboard':
         return <DashboardPage />;
@@ -138,8 +215,15 @@ function MainAppContent() {
         if (studentView === 'form') {
           return (
             <StudentFormPage 
-              onCancel={() => setStudentView('list')} 
-              onSuccess={() => setStudentView('list')} 
+              onCancel={() => {
+                setStudentView('list');
+                setCrmPrefillData(null);
+              }} 
+              onSuccess={() => {
+                setStudentView('list');
+                setCrmPrefillData(null);
+              }}
+              prefillData={crmPrefillData}
             />
           );
         }
@@ -374,6 +458,16 @@ function MainAppContent() {
         return <CBSECompliancePage />;
       case 'website':
         return <CMSEditorPage />;
+      case 'admissions_crm':
+        return (
+          <AdmissionsCRMPage 
+            onConvertToAdmission={(prefill) => {
+              setCrmPrefillData(prefill);
+              setActiveTab('students');
+              setStudentView('form');
+            }} 
+          />
+        );
       case 'settings':
         return <SettingsPage />;
       case 'employees':
@@ -525,6 +619,22 @@ function MainAppContent() {
           </div>
           
           <div className="flex items-center gap-3">
+            {user?.role === 'parent' && siblingRes?.data && siblingRes.data.length > 0 && (
+              <div className="flex items-center gap-2 mr-2">
+                <span className="text-xs text-neutral-500 font-semibold font-display">Student:</span>
+                <select
+                  value={activeStudentId}
+                  onChange={(e) => setActiveStudentId(e.target.value)}
+                  className="text-xs font-semibold bg-neutral-50 hover:bg-neutral-100 text-neutral-800 px-3 py-1.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary transition cursor-pointer"
+                >
+                  {siblingRes.data.map((student: any) => (
+                    <option key={student.id} value={student.id}>
+                      {student.first_name} {student.last_name} ({student.class_name || 'N/A'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <span className="text-xs font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-200">
               DBMS ONLINE
             </span>

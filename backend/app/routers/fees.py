@@ -216,7 +216,7 @@ async def send_fee_reminder(
 async def generate_payment_link(
     student_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_roles(["school_admin", "accountant"]))
+    current_user: User = Depends(require_roles(["school_admin", "accountant", "parent"]))
 ):
     repo = FeesRepository(db)
     service = FeesService(repo)

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 
 # CMS Site schemas
 class CMSSiteSettings(BaseModel):
@@ -90,6 +90,10 @@ class CMSInquiryCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: str = Field(..., min_length=1, max_length=100)
     message: str = Field(..., min_length=1, max_length=1000)
+    phone: Optional[str] = None
+    student_name: Optional[str] = None
+    student_dob: Optional[date] = None
+    target_class_id: Optional[UUID] = None
 
 class CMSInquiryResponseData(BaseModel):
     id: UUID
@@ -97,7 +101,14 @@ class CMSInquiryResponseData(BaseModel):
     email: str
     message: str
     status: str
+    phone: Optional[str] = None
+    student_name: Optional[str] = None
+    student_dob: Optional[date] = None
+    target_class_id: Optional[UUID] = None
+    follow_up_notes: List[Dict[str, Any]] = []
+    target_class_name: Optional[str] = None
     created_at: datetime
+    updated_at: datetime
 
 class CMSInquiryResponse(BaseModel):
     success: bool = True
@@ -108,3 +119,7 @@ class CMSInquiryListResponse(BaseModel):
     success: bool = True
     data: List[CMSInquiryResponseData]
     message: str = "OK"
+
+class CMSInquiryNoteCreate(BaseModel):
+    note: str = Field(..., min_length=1, max_length=1000)
+    author: str = Field(..., min_length=1, max_length=100)

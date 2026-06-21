@@ -44,6 +44,11 @@ export function LoginPage({ onGoToOnboard }: { onGoToOnboard: () => void }) {
     setValue('password', 'admin123');
   };
 
+  const handleFillDemoParent = () => {
+    setValue('email', 'parent@default.skolr.in');
+    setValue('password', 'parent123');
+  };
+
   const onSubmit = async (data: LoginFormData) => {
     const schoolId = useTenantStore.getState().schoolId;
     if (!schoolId) {
@@ -248,6 +253,14 @@ export function LoginPage({ onGoToOnboard }: { onGoToOnboard: () => void }) {
               >
                 <span>Fill Class Teacher Account</span>
                 <span className="text-[10px] text-slate-500 font-normal">teacher@default.skolr.in</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleFillDemoParent}
+                className="w-full bg-slate-950 hover:bg-slate-900 border border-slate-800 text-xs text-amber-500 hover:text-amber-400 font-semibold py-2 px-3 rounded-lg text-left transition flex justify-between items-center"
+              >
+                <span>Fill Student Parent Account</span>
+                <span className="text-[10px] text-slate-500 font-normal">parent@default.skolr.in</span>
               </button>
             </div>
           </div>

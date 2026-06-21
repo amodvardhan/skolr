@@ -96,6 +96,7 @@ async def seed_database():
         # Check if default users exist
         admin_user = None
         teacher_user = None
+        parent_user = None
         
         # We query for existing users to make seeding idempotent
         from sqlalchemy import select
@@ -134,6 +135,23 @@ async def seed_database():
             session.add(teacher_user)
             await session.commit()
             await session.refresh(teacher_user)
+
+        res_parent = await session.execute(select(User).where(User.email == "parent@default.skolr.in"))
+        parent_user = res_parent.scalar_one_or_none()
+        if not parent_user:
+            logger.info("Seeding default parent user...")
+            parent_user = User(
+                email="parent@default.skolr.in",
+                hashed_password=get_password_hash("parent123"),
+                first_name="Rajesh",
+                last_name="Patel",
+                role="parent",
+                school_id=UUID(DEFAULT_SCHOOL_ID),
+                is_active=True
+            )
+            session.add(parent_user)
+            await session.commit()
+            await session.refresh(parent_user)
 
         # Seeding tenant structures inside school_school_default
         result = await session.execute(text(f"SELECT COUNT(*) FROM {DEFAULT_SCHEMA_NAME}.academic_years"))
@@ -225,8 +243,9 @@ async def seed_database():
                 first_name="Rajesh",
                 last_name="Patel",
                 mobile="9876543211",
-                email="rajesh.patel@example.com",
-                occupation="Business"
+                email="parent@default.skolr.in",
+                occupation="Business",
+                user_id=parent_user.id if parent_user else None
             )
             session.add(parent)
             await session.commit()

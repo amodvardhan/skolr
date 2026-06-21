@@ -15,7 +15,8 @@ from app.schemas.cms import (
     CMSSiteResponse, CMSSiteUpdate, CMSSiteResponseData,
     CMSPageResponse, CMSPageCreate, CMSPageUpdate, CMSPageListResponse, CMSPageResponseData,
     PublishResponse, PublishResponseData,
-    CMSInquiryCreate, CMSInquiryResponse, CMSInquiryResponseData, CMSInquiryListResponse
+    CMSInquiryCreate, CMSInquiryResponse, CMSInquiryResponseData, CMSInquiryListResponse,
+    CMSInquiryNoteCreate
 )
 
 router = APIRouter(prefix="/cms", tags=["CMS & Website Builder"])
@@ -316,8 +317,42 @@ def map_inquiry_to_schema(inq) -> CMSInquiryResponseData:
         email=inq.email,
         message=inq.message,
         status=inq.status,
-        created_at=inq.created_at
+        phone=getattr(inq, "phone", None),
+        student_name=getattr(inq, "student_name", None),
+        student_dob=getattr(inq, "student_dob", None),
+        target_class_id=getattr(inq, "target_class_id", None),
+        follow_up_notes=getattr(inq, "follow_up_notes", None) or [],
+        target_class_name=f"{inq.target_class.name} - {inq.target_class.section}" if (getattr(inq, "target_class", None) and getattr(inq.target_class, "name", None)) else None,
+        created_at=inq.created_at,
+        updated_at=getattr(inq, "updated_at", inq.created_at)
     )
+
+@router.get("/classes")
+async def list_school_classes_public(
+    school_id: UUID = Query(...),
+    db: AsyncSession = Depends(get_db)
+):
+    # Resolve school tenant schema context manually
+    from app.core.database import sanitize_schema_name
+    schema_name = sanitize_schema_name(str(school_id))
+    await db.execute(text(f"SET search_path TO {schema_name}, public"))
+    
+    from app.models.tenant import Class
+    result = await db.execute(
+        select(Class).where(Class.deleted_at.is_(None)).order_by(Class.name)
+    )
+    classes = result.scalars().all()
+    return {
+        "success": True,
+        "data": [
+            {
+                "id": str(c.id),
+                "name": c.name,
+                "section": c.section
+            }
+            for c in classes
+        ]
+    }
 
 @router.post("/inquiries", response_model=CMSInquiryResponse)
 async def create_inquiry(
@@ -348,11 +383,11 @@ async def list_inquiries(
 @router.patch("/inquiries/{inquiry_id}/status", response_model=CMSInquiryResponse)
 async def update_inquiry_status(
     inquiry_id: UUID,
-    status_val: str = Query(..., description="new, read, or resolved"),
+    status_val: str = Query(..., description="new, contacted, visit_scheduled, applied, admitted, archived, read, resolved"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_roles(["school_admin"]))
 ):
-    if status_val not in ["new", "read", "resolved"]:
+    if status_val not in ["new", "contacted", "visit_scheduled", "applied", "admitted", "archived", "read", "resolved"]:
         raise HTTPException(status_code=400, detail="Invalid status value")
         
     repo = CMSRepository(db)
@@ -361,4 +396,35 @@ async def update_inquiry_status(
     if not inquiry:
         raise HTTPException(status_code=404, detail="Inquiry not found")
     return CMSInquiryResponse(data=map_inquiry_to_schema(inquiry), message="Inquiry status updated")
+
+@router.post("/inquiries/{inquiry_id}/notes", response_model=CMSInquiryResponse)
+async def add_inquiry_note(
+    inquiry_id: UUID,
+    note_data: CMSInquiryNoteCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(["school_admin"]))
+):
+    repo = CMSRepository(db)
+    service = CMSService(repo)
+    inquiry = await service.add_follow_up_note(inquiry_id, note_data.note, note_data.author)
+    if not inquiry:
+        raise HTTPException(status_code=404, detail="Inquiry not found")
+    return CMSInquiryResponse(data=map_inquiry_to_schema(inquiry), message="Note added successfully")
+
+@router.post("/inquiries/{inquiry_id}/admit")
+async def admit_inquiry(
+    inquiry_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(["school_admin"]))
+):
+    repo = CMSRepository(db)
+    service = CMSService(repo)
+    prefill_data = await service.convert_inquiry_to_admission(inquiry_id)
+    if not prefill_data:
+        raise HTTPException(status_code=404, detail="Inquiry not found")
+    return {
+        "success": True,
+        "data": prefill_data,
+        "message": "Lead converted successfully"
+    }
 

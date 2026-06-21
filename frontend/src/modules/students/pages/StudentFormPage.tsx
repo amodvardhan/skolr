@@ -34,9 +34,10 @@ type StudentFormValues = z.infer<typeof studentAdmissionSchema>;
 interface StudentFormPageProps {
   onCancel: () => void;
   onSuccess: () => void;
+  prefillData?: any;
 }
 
-export function StudentFormPage({ onCancel, onSuccess }: StudentFormPageProps) {
+export function StudentFormPage({ onCancel, onSuccess, prefillData }: StudentFormPageProps) {
   const queryClient = useQueryClient();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -54,14 +55,20 @@ export function StudentFormPage({ onCancel, onSuccess }: StudentFormPageProps) {
   } = useForm<StudentFormValues>({
     resolver: zodResolver(studentAdmissionSchema),
     defaultValues: {
-      first_name: '',
-      last_name: '',
-      date_of_birth: '',
-      gender: 'M',
+      first_name: prefillData?.first_name || '',
+      last_name: prefillData?.last_name || '',
+      date_of_birth: prefillData?.date_of_birth || '',
+      gender: prefillData?.gender || 'M',
       roll_number: undefined,
-      admission_date: new Date().toISOString().split('T')[0],
-      class_id: '',
-      father: { first_name: '', last_name: '', mobile: '', email: '', occupation: '' },
+      admission_date: prefillData?.admission_date || new Date().toISOString().split('T')[0],
+      class_id: prefillData?.class_id || '',
+      father: {
+        first_name: prefillData?.parents?.[0]?.first_name || '',
+        last_name: prefillData?.parents?.[0]?.last_name || '',
+        mobile: prefillData?.parents?.[0]?.mobile || '',
+        email: prefillData?.parents?.[0]?.email || '',
+        occupation: prefillData?.parents?.[0]?.occupation || ''
+      },
       mother: { first_name: '', last_name: '', mobile: '', email: '', occupation: '' }
     }
   });

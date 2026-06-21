@@ -309,7 +309,17 @@ class CMSInquiry(SkolrBase, TimestampMixin):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     email: Mapped[str] = mapped_column(String(100), nullable=False)
     message: Mapped[str] = mapped_column(String(1000), nullable=False)
-    status: Mapped[str] = mapped_column(String(20), default="new", server_default="new") # new, read, resolved
+    status: Mapped[str] = mapped_column(String(30), default="new", server_default="new") # new, contacted, visit_scheduled, applied, admitted, archived
+
+    # Rich Lead fields
+    phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    student_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    student_dob: Mapped[date | None] = mapped_column(Date, nullable=True)
+    target_class_id: Mapped[UUID | None] = mapped_column(ForeignKey("classes.id"), nullable=True)
+    follow_up_notes: Mapped[list] = mapped_column(JSONB, default=list, server_default="[]")
+
+    target_class = relationship("Class")
+
 
 
 
