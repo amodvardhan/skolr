@@ -303,5 +303,15 @@ class CMSPage(SkolrBase, TimestampMixin):
     seo_description: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
 
+class CMSInquiry(SkolrBase, TimestampMixin):
+    __tablename__ = "cms_inquiries"
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    email: Mapped[str] = mapped_column(String(100), nullable=False)
+    message: Mapped[str] = mapped_column(String(1000), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="new", server_default="new") # new, read, resolved
+
+
+
 
 

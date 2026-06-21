@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.seo_title or page.title }} | {{ site.settings.name or "School Portal" }}</title>
+  {% if page.seo_description %}
+  <meta name="description" content="{{ page.seo_description }}">
+  {% endif %}
+  
+  <!-- Dynamic Fonts depending on active template -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {% if site.template_id == 'template-001-prestige' or site.template_id == 'template-006-heritage' %}
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  {% elif site.template_id == 'template-002-modern' or site.template_id == 'template-004-elite' or site.template_id == 'template-007-global' or site.template_id == 'template-008-pinnacle' or site.template_id == 'template-010-summit' %}
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:wght@300..800&display=swap" rel="stylesheet">
+  {% elif site.template_id == 'template-003-vibrant' or site.template_id == 'template-005-montessori' or site.template_id == 'template-012-horizon' or site.template_id == 'template-009-greenwood' %}
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+  {% else %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  {% endif %}
+  
+  <!-- Stylesheets -->
+  {% if preview_mode %}
+    {% set temp_id = active_template_id | default(site.template_id) %}
+    <link rel="stylesheet" href="/templates/{{ temp_id }}/styles/variables.css?v={{ cache_bust }}">
+    <link rel="stylesheet" href="/templates/{{ temp_id }}/styles/main.css?v={{ cache_bust }}">
+  {% else %}
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="styles/main.css">
+  {% endif %}
+  
+  <!-- Dynamic Color Theme & Template Styling Overrides -->
+  <style>
+    :root {
+      --primary: {{ theme.primary }};
+      --accent: {{ theme.accent }};
+      --bg: {{ theme.bg }};
+      --neutral: {{ theme.neutral }};
+      
+      {% if site.template_id == 'template-001-prestige' or site.template_id == 'template-006-heritage' or site.template_id == 'template-011-beacon' %}
+        --font-sans: 'Inter', sans-serif;
+        --font-display: 'Playfair Display', serif;
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 16px;
+      {% elif site.template_id == 'template-002-modern' or site.template_id == 'template-004-elite' or site.template_id == 'template-007-global' or site.template_id == 'template-008-pinnacle' or site.template_id == 'template-010-summit' %}
+        --font-sans: 'Plus Jakarta Sans', sans-serif;
+        --font-display: 'Outfit', sans-serif;
+        --radius-sm: 0px;
+        --radius-md: 0px;
+        --radius-lg: 0px;
+      {% elif site.template_id == 'template-003-vibrant' or site.template_id == 'template-005-montessori' or site.template_id == 'template-012-horizon' or site.template_id == 'template-009-greenwood' %}
+        --font-sans: 'Quicksand', sans-serif;
+        --font-display: 'Fredoka', sans-serif;
+        --radius-sm: 12px;
+        --radius-md: 24px;
+        --radius-lg: 40px;
+      {% else %}
+        --font-sans: 'Inter', sans-serif;
+        --font-display: 'Plus Jakarta Sans', sans-serif;
+        --radius-sm: 6px;
+        --radius-md: 12px;
+        --radius-lg: 20px;
+      {% endif %}
+    }
+    
+    {% if preview_mode %}
+    /* Floating Link Popover Tool */
+    .link-popover-card {
+      position: absolute;
+      display: none;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      padding: 10px 14px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      z-index: 99999;
+      font-family: var(--font-sans), sans-serif;
+      font-size: 12px;
+      color: #1e293b;
+      flex-direction: column;
+      gap: 8px;
+      width: 280px;
+      box-sizing: border-box;
+      pointer-events: auto;
+    }
+    .link-popover-card input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 6px 8px;
+      box-sizing: border-box;
+      font-size: 11px;
+      outline: none;
+      background: #f8fafc;
+    }
+    .link-popover-card input:focus {
+      border-color: var(--accent);
+      background: #fff;
+    }
+    .link-popover-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+    .link-popover-row button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 11px;
+      transition: background 0.2s;
+    }
+    .link-popover-row button:hover {
+      opacity: 0.9;
+    }
+    .link-popover-card label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      color: #64748b;
+      user-select: none;
+    }
+    .link-popover-card label input {
+      width: auto;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    /* Style for unpublished navbar links */
+    .nav-hidden {
+      opacity: 0.55;
+      position: relative;
+      border-bottom: 1.5px dashed #94a3b8;
+    }
+    .hidden-nav-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      margin-left: 4px;
+      cursor: help;
+      vertical-align: middle;
+    }
+    {% endif %}
+  </style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="site-header">
+    <div class="container header-container">
+      <a href="#" class="logo-link">
+        {% if site.settings.logo_url %}
+          <img src="{{ site.settings.logo_url }}" alt="School Logo" class="logo-img" style="height: 40px; max-height: 40px; width: auto; max-width: 180px; object-fit: contain; display: block; border-radius: 4px;">
+        {% else %}
+          <div class="logo-icon">{{ (site.settings.name or "School Portal")[:1] }}</div>
+        {% endif %}
+        <span class="logo-text {% if preview_mode %}editable-text{% endif %}" data-type="site_name">{{ site.settings.name or "School Portal" }}</span>
+      </a>
+      <nav class="site-nav">
+        {% for p in all_pages %}
+          {% if p.is_published or preview_mode %}
+            {% if preview_mode %}
+              <a href="/api/v1/cms/preview/{{ p.slug }}?school_id={{ school_id }}" 
+                 class="nav-link {% if p.slug == page.slug %}active{% endif %} {% if not p.is_published %}nav-hidden{% endif %} editable-text" 
+                 data-type="page_title" 
+                 data-page-id="{{ p.id }}"
+                 data-page-slug="{{ p.slug }}">
+                {{ p.title }}
+                {% if not p.is_published %}
+                  <span class="hidden-nav-badge" title="Hidden from public navigation" contenteditable="false">👁️‍🗨️</span>
+                {% endif %}
+              </a>
+            {% else %}
+              <a href="{{ p.slug }}.html" class="nav-link {% if p.slug == page.slug %}active{% endif %}">
+                {{ p.title }}
+              </a>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Page Sections -->
+  <main>
+    {% block content %}
+    {% for section in page.sections %}
+      {% if section.visible %}
+        
+        {# Resolve section style variables safely #}
+        {% set style = section.get('style', {}) or {} %}
+        {% set padding_class = 'pad-compact' if style.padding == 'small' else ('pad-spacious' if style.padding == 'large' else 'pad-comfortable') %}
+        {% set align_class = 'align-' ~ (style.align or 'left') %}
+        {% set theme_class = (style.theme or 'light') ~ '-theme' %}
+        {% set layout_class = 'layout-' ~ (style.layout or 'split') %}
+        {% set bg_style = "background-image: url('" ~ style.bg_image ~ "');" if style.bg_type == 'image' and style.bg_image else "" %}
+        
+        <!-- SECTION: HERO -->
+        {% if section.type == 'hero' %}
+          <section id="{{ section.id }}" class="hero-section {{ padding_class }} {{ align_class }} {{ theme_class }}" style="{{ bg_style }}">
+            {% if style.bg_type == 'image' %}
+              <div class="bg-overlay" style="opacity: {{ style.bg_overlay_opacity if style.bg_overlay_opacity is defined else 0.4 }};"></div>
+            {% endif %}
+            <div class="container hero-grid {{ layout_class }}">
+              <div class="hero-content">
+                {% if section.content.tagline or preview_mode %}
+                  <span class="hero-tagline editable-text" data-section-id="{{ section.id }}" data-field="tagline">{{ section.content.tagline or "" }}</span>
+                {% endif %}
+                <h1 class="hero-headline editable-text" data-section-id="{{ section.id }}" data-field="headline">{{ section.content.headline or "Welcome to Our School" }}</h1>
+                {% if section.content.subheadline or preview_mode %}
+                  <p class="hero-subheadline editable-text" data-section-id="{{ section.id }}" data-field="subheadline">{{ (section.content.subheadline or "") | safe }}</p>
+                {% endif %}
+                <div class="hero-ctas">
+                  {% if section.content.cta_primary_label or preview_mode %}
+                    <a href="{{ section.content.cta_primary_url or '#' }}" 
+                       class="btn btn-primary {% if preview_mode %}editable-text editable-link{% endif %}" 
+                       data-section-id="{{ section.id }}" 
+                       data-field="cta_primary_label"
+                       data-field-url="cta_primary_url"
+                       data-field-new-tab="cta_primary_new_tab"
+                       {% if section.content.cta_primary_new_tab %}target="_blank"{% endif %}>
+                      {{ section.content.cta_primary_label or "Primary CTA" }}
+                    </a>
+                  {% endif %}
+                  {% if section.content.cta_secondary_label or preview_mode %}
+                    <a href="{{ section.content.cta_secondary_url or '#' }}" 
+                       class="btn btn-secondary {% if preview_mode %}editable-text editable-link{% endif %}" 
+                       data-section-id="{{ section.id }}" 
+                       data-field="cta_secondary_label"
+                       data-field-url="cta_secondary_url"
+                       data-field-new-tab="cta_secondary_new_tab"
+                       {% if section.content.cta_secondary_new_tab %}target="_blank"{% endif %}>
+                      {{ section.content.cta_secondary_label or "Secondary CTA" }}
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="hero-visual">
+                <img src="{{ section.content.image_url or 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800' }}" alt="School Visual" style="width: 100%; border-radius: var(--radius-lg); box-shadow: 0 20px 40px rgba(0,0,0,0.08);">
+              </div>
+            </div>
+          </section>
+          
+        <!-- SECTION: STATS -->
+        {% elif section.type == 'stats' %}
+          <section id="{{ section.id }}" class="stats-section {{ padding_class }} {{ align_class }} {{ theme_class }}" style="{{ bg_style }}">
+            {% if style.bg_type == 'image' %}
+              <div class="bg-overlay" style="opacity: {{ style.bg_overlay_opacity if style.bg_overlay_opacity is defined else 0.4 }};"></div>
+            {% endif %}
+            <div class="container stats-grid">
+              {% for item in section.content['items'] %}
+                <div class="stat-card">
+                  <div class="stat-value">{{ item.value }}</div>
+                  <div class="stat-label">{{ item.label }}</div>
+                </div>
+              {% else %}
+                <div class="stat-card">
+                  <div class="stat-value">1,200+</div>
+                  <div class="stat-label">Students</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-value">80+</div>
+                  <div class="stat-label">Faculty</div>
+                </div>
+              {% endfor %}
+            </div>
+          </section>
+          
+        <!-- SECTION: ABOUT -->
+        {% elif section.type == 'about' %}
+          <section id="{{ section.id }}" class="about-section {{ padding_class }} {{ align_class }} {{ theme_class }}" style="{{ bg_style }}">
+            {% if style.bg_type == 'image' %}
+              <div class="bg-overlay" style="opacity: {{ style.bg_overlay_opacity if style.bg_overlay_opacity is defined else 0.4 }};"></div>
+            {% endif %}
+            <div class="container about-grid {{ layout_class }}">
+              <div class="about-content">
+                <h2 class="section-heading editable-text" data-section-id="{{ section.id }}" data-field="heading">{{ section.content.heading or "About Our School" }}</h2>
+                <p class="about-text editable-text" data-section-id="{{ section.id }}" data-field="text">{{ (section.content.text or "") | safe }}</p>
+              </div>
+              {% if section.content.image_url %}
+                <div class="about-visual">
+                  <img src="{{ section.content.image_url }}" alt="About Image" class="about-image">
+                </div>
+              {% endif %}
+            </div>
+          </section>
+          
+        <!-- SECTION: TESTIMONIALS -->
+        {% elif section.type == 'testimonials' %}
+          <section id="{{ section.id }}" class="testimonials-section {{ padding_class }} {{ align_class }} {{ theme_class }}" style="{{ bg_style }}">
+            {% if style.bg_type == 'image' %}
+              <div class="bg-overlay" style="opacity: {{ style.bg_overlay_opacity if style.bg_overlay_opacity is defined else 0.4 }};"></div>
+            {% endif %}
+            <div class="container">
+              <h2 class="section-heading editable-text" data-section-id="{{ section.id }}" data-field="heading">{{ section.content.heading or "What Parents Say" }}</h2>
+              <div class="testimonials-grid">
+                {% for item in section.content['items'] %}
+                  <div class="testimonial-card">
+                    <p class="testimonial-text">"{{ item.text | safe }}"</p>
+                    <div class="testimonial-author">
+                      <span class="testimonial-name">{{ item.name }}</span>
+                      <span class="testimonial-role">{{ item.role }}</span>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
+
+        <!-- SECTION: FACULTY (LIVE ERP SYNC) -->
+        {% elif section.type == 'faculty' %}
+          <section id="{{ section.id }}" class="faculty-section {{ padding_class }} {{ align_class }} {{ theme_class }}" style="{{ bg_style }}">
+            {% if style.bg_type == 'image' %}
+              <div class="bg-overlay" style="opacity: {{ style.bg_overlay_opacity if style.bg_overlay_opacity is defined else 0.4 }};"></div>
+            {% endif %}
+            <div class="container">
+              <h2 class="section-heading editable-text" data-section-id="{{ section.id }}" data-field="heading">{{ section.content.heading or "Meet Our Faculty" }}</h2>
+              {% if section.content.description or preview_mode %}
+                <p class="section-subtext editable-text" data-section-id="{{ section.id }}" data-field="description" style="margin-top: 10px; opacity: 0.7;">{{ section.content.description or "" }}</p>
+              {% endif %}
+              <div class="faculty-grid">
+                {% for teacher in erp.faculty %}
+                  <div class="faculty-card">
+                    <div class="faculty-avatar">
+                      {{ teacher.name[:1] }}
+                    </div>
+                    <h3 class="faculty-name">{{ teacher.name }}</h3>
+                    <p class="faculty-designation">{{ teacher.designation }}</p>
+                    <p class="faculty-qualification">{{ teacher.qualification }}</p>
+                  </div>
+                {% else %}
+                  <div class="faculty-card">
+                    <div class="faculty-avatar">A</div>
+                    <h3 class="faculty-name">Aditya Sharma</h3>
+                    <p class="faculty-designation">Senior Teacher</p>
+                    <p class="faculty-qualification">M.Sc., B.Ed.</p>
+                  </div>
+                  <div class="faculty-card">
+                    <div class="faculty-avatar">S</div>
+                    <h3 class="faculty-name">School Principal</h3>
+                    <p class="faculty-designation">Principal</p>
+                    <p class="faculty-qualification">M.A., M.Ed.</p>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
+
+        <!-- SECTION: ADMISSIONS (LIVE ERP FEES SYNC) -->
+        {% elif section.type == 'admissions' %}
+          <section id="{{ section.id }}" class="admissions-section {{ padding_class }} {{ align_class }} {{ theme_class }}" style="{{ bg_style }}">
+            {% if style.bg_type == 'image' %}
+              <div class="bg-overlay" style="opacity: {{ style.bg_overlay_opacity if style.bg_overlay_opacity is defined else 0.4 }};"></div>
+            {% endif %}
+            <div class="container">
+              <h2 class="section-heading editable-text" data-section-id="{{ section.id }}" data-field="heading">{{ section.content.heading or "Fees & Admissions Guidelines" }}</h2>
+              {% if section.content.description or preview_mode %}
+                <p class="section-subtext editable-text" data-section-id="{{ section.id }}" data-field="description" style="margin-top: 10px; opacity: 0.7; margin-bottom: 20px;">{{ section.content.description or "" }}</p>
+              {% endif %}
+              <div class="admissions-grid">
+                {% for structure in erp.fees %}
+                  <div class="fee-card">
+                    <h3 class="fee-title">{{ structure.name }}</h3>
+                    <div class="fee-amount">₹{{ "{:,.0f}".format(structure.total_amount) }}<span style="font-size: 14px; font-weight: normal; opacity: 0.6;"> / yr</span></div>
+                    <p class="fee-note">Applicable for the current academic session.</p>
+                  </div>
+                {% else %}
+                  <div class="fee-card">
+                    <h3 class="fee-title">Standard Curriculum</h3>
+                    <div class="fee-amount">₹15,000<span style="font-size: 14px; font-weight: normal; opacity: 0.6;"> / yr</span></div>
+                    <p class="fee-note">Base tuition structure.</p>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
+
+        <!-- SECTION: GALLERY -->
+        {% elif section.type == 'gallery' %}
+          <section id="{{ section.id }}" class="gallery-section {{ padding_class }} {{ align_class }} {{ theme_class }}" style="{{ bg_style }}">
+            {% if style.bg_type == 'image' %}
+              <div class="bg-overlay" style="opacity: {{ style.bg_overlay_opacity if style.bg_overlay_opacity is defined else 0.4 }};"></div>
+            {% endif %}
+            <div class="container">
+              <h2 class="section-heading editable-text" data-section-id="{{ section.id }}" data-field="heading">{{ section.content.heading or "Life at Campus" }}</h2>
+              <div class="gallery-grid">
+                {% for img in section.content.images %}
+                  <div class="gallery-item">
+                    <img src="{{ img.url }}" alt="Gallery Image" class="gallery-img">
+                    <div class="gallery-overlay">
+                      <span class="gallery-caption">{{ img.caption }}</span>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
+
+        <!-- SECTION: CONTACT -->
+        {% elif section.type == 'contact' %}
+          <section id="{{ section.id }}" class="contact-section {{ padding_class }} {{ align_class }} {{ theme_class }}" style="{{ bg_style }}">
+            {% if style.bg_type == 'image' %}
+              <div class="bg-overlay" style="opacity: {{ style.bg_overlay_opacity if style.bg_overlay_opacity is defined else 0.4 }};"></div>
+            {% endif %}
+            <div class="container">
+              <h2 class="section-heading editable-text" data-section-id="{{ section.id }}" data-field="heading">{{ section.content.heading or "Contact Our Helpdesk" }}</h2>
+              <div class="contact-grid">
+                <div class="contact-info-list">
+                  <div class="contact-info-item">
+                    <div class="contact-icon">📞</div>
+                    <div class="contact-details">
+                      <h4>Phone</h4>
+                      <p class="{% if preview_mode %}editable-text{% endif %}" data-section-id="{{ section.id }}" data-field="phone">{{ section.content.phone or site.settings.phone or "" }}</p>
+                    </div>
+                  </div>
+                  <div class="contact-info-item">
+                    <div class="contact-icon">✉️</div>
+                    <div class="contact-details">
+                      <h4>Email Helpdesk</h4>
+                      <p class="{% if preview_mode %}editable-text{% endif %}" data-section-id="{{ section.id }}" data-field="email">{{ section.content.email or site.settings.email or "" }}</p>
+                    </div>
+                  </div>
+                  <div class="contact-info-item">
+                    <div class="contact-icon">📍</div>
+                    <div class="contact-details">
+                      <h4>Campus Address</h4>
+                      <p class="{% if preview_mode %}editable-text{% endif %}" data-section-id="{{ section.id }}" data-field="address">{{ section.content.address or site.settings.address or "" }}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="contact-form">
+                  <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="inquiry-name" class="form-control" placeholder="Enter your name">
+                  </div>
+                  <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="inquiry-email" class="form-control" placeholder="Enter your email">
+                  </div>
+                  <div class="form-group">
+                    <label>Your Inquiry Message</label>
+                    <textarea id="inquiry-message" class="form-control" rows="4" placeholder="How can we help you?"></textarea>
+                  </div>
+                  <button id="inquiry-submit-btn" class="btn btn-primary" style="width: 100%;">Submit Inquiry</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        <!-- SECTION: CUSTOM RICH TEXT -->
+        {% elif section.type == 'custom' %}
+          <section id="{{ section.id }}" class="custom-section {{ padding_class }} {{ align_class }} {{ theme_class }}" style="{{ bg_style }}">
+            {% if style.bg_type == 'image' %}
+              <div class="bg-overlay" style="opacity: {{ style.bg_overlay_opacity if style.bg_overlay_opacity is defined else 0.4 }};"></div>
+            {% endif %}
+            <div class="container">
+              <h2 class="section-heading editable-text" data-section-id="{{ section.id }}" data-field="heading">{{ section.content.heading or "Institutional Highlights" }}</h2>
+              <div class="custom-body" style="margin-top: 32px; max-width: 800px; margin-left: auto; margin-right: auto; text-align: inherit;">
+                {% if section.content.subheading or preview_mode %}
+                  <h3 class="editable-text" data-section-id="{{ section.id }}" data-field="subheading" style="margin-bottom: 12px; color: var(--primary);">{{ (section.content.subheading or "") | safe }}</h3>
+                {% endif %}
+                {% if section.content.paragraph or preview_mode %}
+                  <p class="editable-text" data-section-id="{{ section.id }}" data-field="paragraph" style="margin-bottom: 20px;">{{ (section.content.paragraph or "") | safe }}</p>
+                {% endif %}
+                {% if section.content['items'] %}
+                  <ul style="list-style-type: disc; padding-left: 20px; text-align: left; display: inline-block;">
+                    {% for li in section.content['items'] %}
+                      <li style="margin-bottom: 8px;">{{ li.text | safe }}</li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </div>
+            </div>
+          </section>
+          
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    {% endblock %}
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-about">
+        <h3 class="footer-brand-name">{{ site.settings.name or "School Portal" }}</h3>
+        <p>Providing high-quality education and building future leaders in a safe, holistic environment.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Quick Access</h4>
+        <ul>
+          {% for p in all_pages %}
+            {% if p.is_published %}
+              {% if preview_mode %}
+                <li><a href="/api/v1/cms/preview/{{ p.slug }}?school_id={{ school_id }}">{{ p.title }}</a></li>
+              {% else %}
+                <li><a href="{{ p.slug }}.html">{{ p.title }}</a></li>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="footer-contact">
+        <h4>Get in Touch</h4>
+        <p>📍 {{ site.settings.address or "Campus Address" }}</p>
+        <p>📞 {{ site.settings.phone or "Helpdesk Phone" }}</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 {{ site.settings.name or "School Portal" }}. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Lightbox Fullscreen Modal -->
+  <div id="gallery-lightbox" class="lightbox-overlay">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightbox-img" class="lightbox-content" src="" alt="Lightbox View">
+    <div id="lightbox-caption" class="lightbox-caption"></div>
+  </div>
+
+  <!-- Floating Link Customizer Popover -->
+  {% if preview_mode %}
+  <div id="floating-link-popover" class="link-popover-card">
+    <div style="font-weight: bold; margin-bottom: 2px; color: var(--primary);">Link Destination</div>
+    <div class="link-popover-row">
+      <input type="text" id="popover-link-url" placeholder="Paste URL or select document..." />
+      <button id="popover-browse-files" title="Browse uploaded files" type="button">📂</button>
+    </div>
+    <div class="link-popover-row" style="justify-content: space-between; margin-top: 4px;">
+      <label>
+        <input type="checkbox" id="popover-new-tab" /> Open in new tab
+      </label>
+      <button id="popover-save-btn" type="button">Apply</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Shared Javascript Handlers -->
+  <script>
+    // Event Delegation for Lightbox
+    document.body.addEventListener('click', function(e) {
+      const galleryItem = e.target.closest('.gallery-item');
+      if (galleryItem) {
+        const imgEl = galleryItem.querySelector('img');
+        const captionEl = galleryItem.querySelector('.gallery-caption');
+        const lightbox = document.getElementById('gallery-lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxCaption = document.getElementById('lightbox-caption');
+        
+        if (imgEl && lightbox && lightboxImg) {
+          lightboxImg.src = imgEl.src;
+          if (lightboxCaption && captionEl) {
+            lightboxCaption.innerText = captionEl.innerText;
+          } else if (lightboxCaption) {
+            lightboxCaption.innerText = '';
+          }
+          lightbox.style.display = 'flex';
+          setTimeout(() => lightbox.classList.add('active'), 50);
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      }
+    });
+
+    const lightbox = document.getElementById('gallery-lightbox');
+    if (lightbox) {
+      lightbox.addEventListener('click', function(e) {
+        const lightboxImg = document.getElementById('lightbox-img');
+        if (e.target !== lightboxImg) {
+          lightbox.classList.remove('active');
+          setTimeout(() => {
+            lightbox.style.display = 'none';
+          }, 300);
+        }
+      });
+    }
+
+    // Inquiry form submit
+    document.body.addEventListener('click', function(e) {
+      const btn = e.target.closest('#inquiry-submit-btn');
+      if (!btn) return;
+      
+      const formEl = btn.closest('.contact-form');
+      if (!formEl) return;
+      
+      const nameInput = formEl.querySelector('#inquiry-name');
+      const emailInput = formEl.querySelector('#inquiry-email');
+      const msgInput = formEl.querySelector('#inquiry-message');
+      
+      if (!nameInput || !emailInput || !msgInput) return;
+      
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const message = msgInput.value.trim();
+      
+      if (!name || !email || !message) {
+        alert("Please fill in all fields.");
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.innerText = "Submitting...";
+      
+      fetch('/api/v1/cms/inquiries?school_id={{ school_id }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, message })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success) {
+          formEl.innerHTML = `
+            <div style="text-align: center; padding: 20px 0;">
+              <div style="font-size: 40px; margin-bottom: 12px; color: var(--accent);">✓</div>
+              <h4 style="margin-bottom: 8px; color: var(--primary);">Inquiry Submitted!</h4>
+              <p style="font-size: 14px; opacity: 0.8;">Thank you. We will get back to you shortly.</p>
+            </div>
+          `;
+        } else {
+          throw new Error(data.message || "Failed to submit");
+        }
+      })
+      .catch(err => {
+        alert("Failed to submit inquiry: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "Submit Inquiry";
+      });
+    });
+  </script>
+
+  {% if preview_mode %}
+  <script>
+    let activeLinkElement = null;
+
+    function showLinkPopover(targetEl) {
+      activeLinkElement = targetEl;
+      const popover = document.getElementById('floating-link-popover');
+      if (!popover) return;
+      
+      const urlInput = document.getElementById('popover-link-url');
+      const newTabCheck = document.getElementById('popover-new-tab');
+      
+      const currentUrl = targetEl.getAttribute('href') || '#';
+      const currentNewTab = targetEl.getAttribute('target') === '_blank';
+      
+      if (urlInput) urlInput.value = currentUrl === '#' ? '' : currentUrl;
+      if (newTabCheck) newTabCheck.checked = currentNewTab;
+      
+      const rect = targetEl.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      
+      popover.style.display = 'flex';
+      popover.style.top = (rect.bottom + scrollTop + 6) + 'px';
+      popover.style.left = (rect.left + scrollLeft + (rect.width / 2) - 140) + 'px'; // 140 is half of 280px width
+    }
+
+    function hideLinkPopover() {
+      const popover = document.getElementById('floating-link-popover');
+      if (popover) {
+        popover.style.display = 'none';
+      }
+      activeLinkElement = null;
+    }
+
+    function saveLinkPopover() {
+      if (!activeLinkElement) return;
+      const urlInput = document.getElementById('popover-link-url');
+      const newTabCheck = document.getElementById('popover-new-tab');
+      if (!urlInput || !newTabCheck) return;
+      
+      const newUrl = urlInput.value.trim() || '#';
+      const newTab = newTabCheck.checked;
+      
+      activeLinkElement.setAttribute('href', newUrl);
+      if (newTab) {
+        activeLinkElement.setAttribute('target', '_blank');
+      } else {
+        activeLinkElement.removeAttribute('target');
+      }
+      
+      const sectionId = activeLinkElement.getAttribute('data-section-id');
+      const labelField = activeLinkElement.getAttribute('data-field');
+      const urlField = activeLinkElement.getAttribute('data-field-url');
+      const newTabField = activeLinkElement.getAttribute('data-field-new-tab');
+      const labelVal = activeLinkElement.innerText.trim();
+      
+      if (sectionId && urlField) {
+        window.parent.postMessage({
+          type: 'update_link_inline',
+          sectionId: sectionId,
+          labelField: labelField,
+          labelValue: labelVal,
+          urlField: urlField,
+          urlValue: newUrl,
+          newTabField: newTabField,
+          newTabValue: newTab
+        }, '*');
+      }
+      
+      hideLinkPopover();
+    }
+
+    // Dismiss popover on outside click
+    document.addEventListener('mousedown', function(e) {
+      const popover = document.getElementById('floating-link-popover');
+      if (popover && popover.style.display === 'flex') {
+        if (!popover.contains(e.target) && (!activeLinkElement || !activeLinkElement.contains(e.target))) {
+          hideLinkPopover();
+        }
+      }
+    });
+
+    // 1. Click-to-Edit Selection Trigger & Page Navigation
+    document.body.addEventListener('click', function(e) {
+      if (e.target.contentEditable === 'true' || e.target.closest('[contenteditable="true"]')) {
+        return;
+      }
+      
+      const navLink = e.target.closest('.site-nav a');
+      if (navLink) {
+        e.preventDefault();
+        e.stopPropagation();
+        const pageSlug = navLink.getAttribute('data-page-slug');
+        if (pageSlug) {
+          window.parent.postMessage({
+            type: 'select_page_by_slug',
+            slug: pageSlug
+          }, '*');
+        }
+        return;
+      }
+
+      const section = e.target.closest('section');
+      if (section && section.id) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        window.parent.postMessage({
+          type: 'select_section',
+          sectionId: section.id
+        }, '*');
+      }
+    }, true);
+
+    // Bind Popover buttons
+    const savePopoverBtn = document.getElementById('popover-save-btn');
+    if (savePopoverBtn) {
+      savePopoverBtn.addEventListener('click', saveLinkPopover);
+    }
+    const popoverInput = document.getElementById('popover-link-url');
+    if (popoverInput) {
+      popoverInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveLinkPopover();
+        }
+      });
+    }
+    const browseBtn = document.getElementById('popover-browse-files');
+    if (browseBtn) {
+      browseBtn.addEventListener('click', function() {
+        if (!activeLinkElement) return;
+        const sectionId = activeLinkElement.getAttribute('data-section-id');
+        const urlField = activeLinkElement.getAttribute('data-field-url');
+        
+        window.parent.postMessage({
+          type: 'open_media_library_for_link',
+          sectionId: sectionId,
+          field: urlField
+        }, '*');
+      });
+    }
+
+    // 2. Secure Real-Time DOM Synchronization
+    window.addEventListener('message', function(event) {
+      const allowedOrigins = [
+        'http://localhost:5173', 'http://127.0.0.1:5173', 'http://[::1]:5173',
+        'http://localhost:3000', 'http://127.0.0.1:3000', 'http://[::1]:3000'
+      ];
+      if (!allowedOrigins.includes(event.origin)) return;
+      
+      const data = event.data;
+      if (!data) return;
+
+      // Handle reordering sections
+      if (data.type === 'reorder_sections' && data.ids) {
+        const mainEl = document.querySelector('main');
+        if (mainEl && data.ids.length > 0) {
+          data.ids.forEach(function(secId) {
+            const secEl = document.getElementById(secId);
+            if (secEl) {
+              mainEl.appendChild(secEl);
+            }
+          });
+        }
+        return;
+      }
+
+      // Handle visibility toggle
+      if (data.type === 'toggle_section_visibility') {
+        const secEl = document.getElementById(data.id);
+        if (secEl) {
+          secEl.style.display = data.visible ? '' : 'none';
+        }
+        return;
+      }
+
+      // Handle deletion
+      if (data.type === 'delete_section') {
+        const secEl = document.getElementById(data.id);
+        if (secEl) {
+          secEl.remove();
+        }
+        return;
+      }
+
+      // Handle section highlights
+      if (data.type === 'highlight_section') {
+        document.querySelectorAll('section').forEach(function(sec) {
+          sec.classList.remove('editor-highlight');
+        });
+        const secEl = document.getElementById(data.id);
+        if (secEl) {
+          secEl.classList.add('editor-highlight');
+          secEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      if (data.type === 'unhighlight_section') {
+        const secEl = document.getElementById(data.id);
+        if (secEl) {
+          secEl.classList.remove('editor-highlight');
+        }
+        return;
+      }
+
+      // Handle link popover file updates
+      if (data.type === 'update_link_url') {
+        const urlInput = document.getElementById('popover-link-url');
+        const newTabCheck = document.getElementById('popover-new-tab');
+        if (urlInput) {
+          urlInput.value = data.value;
+        }
+        if (newTabCheck) {
+          const isDoc = data.value.endsWith('.pdf') || data.value.endsWith('.docx') || data.value.endsWith('.xlsx');
+          if (isDoc) newTabCheck.checked = true;
+        }
+        if (activeLinkElement) {
+          activeLinkElement.setAttribute('href', data.value);
+          const isDoc = data.value.endsWith('.pdf') || data.value.endsWith('.docx') || data.value.endsWith('.xlsx');
+          if (isDoc) {
+            activeLinkElement.setAttribute('target', '_blank');
+          }
+        }
+        return;
+      }
+
+      // Handle content updates
+      if (data.type === 'update_section_content') {
+        const secEl = document.getElementById(data.id);
+        if (!secEl) return;
+
+        const content = data.content;
+        const style = data.style || {};
+
+        // Dynamic Alignment classes
+        secEl.classList.remove('align-left', 'align-center', 'align-right');
+        if (style.align) secEl.classList.add('align-' + style.align);
+
+        // Dynamic Padding classes
+        secEl.classList.remove('pad-compact', 'pad-comfortable', 'pad-spacious');
+        const padClass = style.padding === 'small' ? 'pad-compact' : (style.padding === 'large' ? 'pad-spacious' : 'pad-comfortable');
+        secEl.classList.add(padClass);
+
+        // Dynamic Theme classes
+        secEl.classList.remove('light-theme', 'dark-theme', 'accent-theme');
+        if (style.theme) secEl.classList.add(style.theme + '-theme');
+
+        // Dynamic Background styles
+        const overlay = secEl.querySelector('.bg-overlay');
+        secEl.style.backgroundImage = '';
+        if (style.bg_type === 'image' && style.bg_image) {
+          secEl.style.backgroundImage = "url('" + style.bg_image + "')";
+          if (!overlay) {
+            const ovEl = document.createElement('div');
+            ovEl.className = 'bg-overlay';
+            ovEl.style.opacity = style.bg_overlay_opacity || 0.4;
+            secEl.insertBefore(ovEl, secEl.firstChild);
+          } else {
+            overlay.style.opacity = style.bg_overlay_opacity || 0.4;
+          }
+        } else if (overlay) {
+          overlay.remove();
+        }
+
+        // Section specific content rewriting
+        if (data.sectionType === 'hero') {
+          const tagline = secEl.querySelector('.hero-tagline');
+          if (tagline) {
+            if (content.tagline) {
+              tagline.innerText = content.tagline;
+              tagline.style.display = '';
+            } else {
+              tagline.style.display = 'none';
+            }
+          }
+          const headline = secEl.querySelector('.hero-headline');
+          if (headline) headline.innerText = content.headline || '';
+          
+          const subheadline = secEl.querySelector('.hero-subheadline');
+          if (subheadline) {
+            if (content.subheadline) {
+              subheadline.innerHTML = content.subheadline;
+              subheadline.style.display = '';
+            } else {
+              subheadline.style.display = 'none';
+            }
+          }
+          const btnPrimary = secEl.querySelector('.btn-primary');
+          if (btnPrimary) {
+            if (content.cta_primary_label) {
+              btnPrimary.innerText = content.cta_primary_label;
+              btnPrimary.style.display = '';
+            } else {
+              btnPrimary.style.display = 'none';
+            }
+          }
+          const btnSecondary = secEl.querySelector('.btn-secondary');
+          if (btnSecondary) {
+            if (content.cta_secondary_label) {
+              btnSecondary.innerText = content.cta_secondary_label;
+              btnSecondary.style.display = '';
+            } else {
+              btnSecondary.style.display = 'none';
+            }
+          }
+          const heroImg = secEl.querySelector('.hero-visual img');
+          if (heroImg && content.image_url) {
+            heroImg.src = content.image_url;
+          }
+        } else if (data.sectionType === 'about') {
+          const heading = secEl.querySelector('.section-heading');
+          if (heading) heading.innerText = content.heading || '';
+          const text = secEl.querySelector('.about-text');
+          if (text) text.innerHTML = content.text || '';
+          const aboutImg = secEl.querySelector('.about-image');
+          if (aboutImg && content.image_url) {
+            aboutImg.src = content.image_url;
+          }
+        } else if (data.sectionType === 'contact') {
+          const heading = secEl.querySelector('.section-heading');
+          if (heading) heading.innerText = content.heading || '';
+          const details = secEl.querySelectorAll('.contact-details p');
+          if (details[0] && content.phone) details[0].innerText = content.phone;
+          if (details[1] && content.email) details[1].innerText = content.email;
+          if (details[2] && content.address) details[2].innerText = content.address;
+        } else if (data.sectionType === 'stats') {
+          const gridEl = secEl.querySelector('.stats-grid');
+          if (gridEl && content.items) {
+            gridEl.innerHTML = '';
+            content.items.forEach(function(item) {
+              const card = document.createElement('div');
+              card.className = 'stat-card';
+              const val = document.createElement('div');
+              val.className = 'stat-value';
+              val.innerText = item.value || '';
+              const lbl = document.createElement('div');
+              lbl.className = 'stat-label';
+              lbl.innerText = item.label || '';
+              card.appendChild(val);
+              card.appendChild(lbl);
+              gridEl.appendChild(card);
+            });
+          }
+        } else if (data.sectionType === 'testimonials') {
+          const heading = secEl.querySelector('.section-heading');
+          if (heading) heading.innerText = content.heading || '';
+          const gridEl = secEl.querySelector('.testimonials-grid');
+          if (gridEl && content.items) {
+            gridEl.innerHTML = '';
+            content.items.forEach(function(item) {
+              const card = document.createElement('div');
+              card.className = 'testimonial-card';
+              const txt = document.createElement('p');
+              txt.className = 'testimonial-text';
+              txt.innerHTML = '"' + (item.text || '') + '"';
+              const author = document.createElement('div');
+              author.className = 'testimonial-author';
+              const name = document.createElement('span');
+              name.className = 'testimonial-name';
+              name.innerText = item.name || '';
+              const role = document.createElement('span');
+              role.className = 'testimonial-role';
+              role.innerText = item.role || '';
+              author.appendChild(name);
+              author.appendChild(role);
+              card.appendChild(txt);
+              card.appendChild(author);
+              gridEl.appendChild(card);
+            });
+          }
+        } else if (data.sectionType === 'gallery') {
+          const heading = secEl.querySelector('.section-heading');
+          if (heading) heading.innerText = content.heading || '';
+          const gridEl = secEl.querySelector('.gallery-grid');
+          if (gridEl && content.images) {
+            gridEl.innerHTML = '';
+            content.images.forEach(function(img) {
+              const item = document.createElement('div');
+              item.className = 'gallery-item';
+              const image = document.createElement('img');
+              image.className = 'gallery-img';
+              image.src = img.url || '';
+              const overlay = document.createElement('div');
+              overlay.className = 'gallery-overlay';
+              const caption = document.createElement('span');
+              caption.className = 'gallery-caption';
+              caption.innerText = img.caption || '';
+              overlay.appendChild(caption);
+              item.appendChild(image);
+              item.appendChild(overlay);
+              gridEl.appendChild(item);
+            });
+          }
+        } else if (data.sectionType === 'custom') {
+          const heading = secEl.querySelector('.section-heading');
+          if (heading) heading.innerText = content.heading || '';
+          
+          const customBody = secEl.querySelector('.custom-body');
+          if (customBody) {
+            customBody.innerHTML = '';
+            if (content.subheading) {
+              const sh = document.createElement('h3');
+              sh.innerHTML = content.subheading;
+              sh.style.marginBottom = '12px';
+              sh.style.color = 'var(--primary)';
+              customBody.appendChild(sh);
+            }
+            if (content.paragraph) {
+              const p = document.createElement('p');
+              p.innerHTML = content.paragraph;
+              p.style.marginBottom = '20px';
+              customBody.appendChild(p);
+            }
+            if (content.items && content.items.length > 0) {
+              const ul = document.createElement('ul');
+              ul.style.listStyleType = 'disc';
+              ul.style.paddingLeft = '20px';
+              content.items.forEach(function(li) {
+                const item = document.createElement('li');
+                item.innerHTML = li.text || '';
+                item.style.marginBottom = '8px';
+                ul.appendChild(item);
+              });
+              customBody.appendChild(ul);
+            }
+          }
+        }
+      } else if (data.type === 'update_theme') {
+        document.documentElement.style.setProperty('--primary', data.theme.primary);
+        document.documentElement.style.setProperty('--accent', data.theme.accent);
+        document.documentElement.style.setProperty('--bg', data.theme.bg);
+        document.documentElement.style.setProperty('--neutral', data.theme.neutral);
+      } else if (data.type === 'update_site_settings') {
+        const settings = data.settings || {};
+        
+        // Update brand logo
+        const logoLink = document.querySelector('.logo-link');
+        if (logoLink) {
+          let imgEl = logoLink.querySelector('.logo-img');
+          let iconEl = logoLink.querySelector('.logo-icon');
+          
+          if (settings.logo_url) {
+            if (!imgEl) {
+              imgEl = document.createElement('img');
+              imgEl.className = 'logo-img';
+              imgEl.alt = 'School Logo';
+              imgEl.style.cssText = 'height: 40px; max-height: 40px; width: auto; max-width: 180px; object-fit: contain; display: block; border-radius: 4px;';
+              if (iconEl) {
+                iconEl.replaceWith(imgEl);
+              } else {
+                logoLink.insertBefore(imgEl, logoLink.firstChild);
+              }
+            }
+            imgEl.src = settings.logo_url;
+          } else {
+            if (imgEl) {
+              iconEl = document.createElement('div');
+              iconEl.className = 'logo-icon';
+              iconEl.innerText = (settings.name || "School Portal").substring(0, 1).toUpperCase();
+              imgEl.replaceWith(iconEl);
+            }
+          }
+          
+          const textEl = logoLink.querySelector('.logo-text');
+          if (textEl) {
+            textEl.innerText = settings.name || 'School Portal';
+          }
+        }
+        
+        const footerBrandName = document.querySelector('.footer-brand-name');
+        if (footerBrandName) {
+          footerBrandName.innerText = settings.name || 'School Portal';
+        }
+      }
+      
+      // Re-bind editable elements after live DOM updates
+      setTimeout(initInlineEditing, 50);
+    });
+
+    // 3. WYSIWYG Inline Editing Synchronization
+    function initInlineEditing() {
+      document.querySelectorAll('.editable-text').forEach(function(el) {
+        el.contentEditable = "true";
+        
+        // Add subtle focus outline
+        el.addEventListener('focus', function() {
+          el.style.outline = '2px dashed var(--accent, #F5A623)';
+          el.style.outlineOffset = '4px';
+          el.style.borderRadius = '4px';
+          
+          if (el.classList.contains('editable-link')) {
+            showLinkPopover(el);
+          }
+        });
+        
+        el.addEventListener('blur', function() {
+          el.style.outline = '';
+          el.style.outlineOffset = '';
+          el.style.borderRadius = '';
+          
+          const sectionId = el.getAttribute('data-section-id');
+          const field = el.getAttribute('data-field');
+          const dataType = el.getAttribute('data-type');
+          const pageId = el.getAttribute('data-page-id');
+          
+          const val = el.innerText.trim();
+          
+          if (dataType === 'site_name') {
+            window.parent.postMessage({
+              type: 'update_site_setting_inline',
+              field: 'name',
+              value: val
+            }, '*');
+          } else if (dataType === 'page_title' && pageId) {
+            window.parent.postMessage({
+              type: 'update_page_title_inline',
+              pageId: pageId,
+              value: val
+            }, '*');
+          } else if (sectionId && field) {
+            const isRich = field === 'text' || field === 'subheadline' || field === 'paragraph' || field === 'subheading';
+            const htmlVal = isRich ? el.innerHTML.trim() : el.innerText.trim();
+            
+            window.parent.postMessage({
+              type: 'update_text_inline',
+              sectionId: sectionId,
+              field: field,
+              value: htmlVal
+            }, '*');
+          }
+        });
+        
+        // Prevent keypress Enter from creating new divs in plain text fields
+        el.addEventListener('keydown', function(e) {
+          const field = el.getAttribute('data-field');
+          const isRich = field === 'text' || field === 'subheadline' || field === 'paragraph' || field === 'subheading';
+          if (e.key === 'Enter' && !isRich) {
+            e.preventDefault();
+            el.blur();
+          }
+        });
+      });
+    }
+
+    // Run initialization immediately and whenever ready
+    initInlineEditing();
+
+    // Notify parent window that preview iframe is ready and fully loaded
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      window.parent.postMessage({ type: 'iframe_ready' }, '*');
+    } else {
+      window.addEventListener('DOMContentLoaded', function() {
+        window.parent.postMessage({ type: 'iframe_ready' }, '*');
+      });
+    }
+  </script>
+  {% endif %}
+</body>
+</html>

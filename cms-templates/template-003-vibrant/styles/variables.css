@@ -1,0 +1,16 @@
+:root {
+  --font-sans: 'Quicksand', system-ui, -apple-system, sans-serif;
+  --font-display: 'Fredoka', var(--font-sans);
+  
+  /* Fallback defaults */
+  --primary: #0EA5E9;
+  --accent: #F59E0B;
+  --bg: #FFFFFF;
+  --neutral: #334155;
+  --neutral-light: #F0F9FF;
+  --neutral-border: #E0F2FE;
+  
+  --radius-sm: 12px;
+  --radius-md: 24px;
+  --radius-lg: 40px;
+}

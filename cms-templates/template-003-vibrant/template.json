@@ -1,0 +1,25 @@
+{
+  "id": "template-003-vibrant",
+  "name": "Vibrant Kids",
+  "description": "Rounded borders and primary accent tones. Tailored for primary and elementary institutions. Uses Fredoka & Quicksand.",
+  "thumbnail": "preview/thumb.png",
+  "color_schemes": [
+    { "name": "Sky & Sun", "primary": "#0EA5E9", "accent": "#F59E0B", "bg": "#FFFFFF" },
+    { "name": "Mint & Cherry", "primary": "#10B981", "accent": "#F43F5E", "bg": "#FAFAF9" },
+    { "name": "Lilac & Coral", "primary": "#8B5CF6", "accent": "#F97316", "bg": "#FAFAF9" }
+  ],
+  "sections": {
+    "hero":          { "required": true,  "max": 1 },
+    "stats":         { "required": false, "max": 1 },
+    "about":         { "required": false, "max": 1 },
+    "testimonials":  { "required": false, "max": 1 },
+    "faculty":       { "required": false, "max": 1 },
+    "admissions":    { "required": false, "max": 1 },
+    "gallery":       { "required": false, "max": 1 },
+    "contact":       { "required": true,  "max": 1 }
+  },
+  "fonts": {
+    "display": "Fredoka",
+    "body": "Quicksand"
+  }
+}

@@ -1,0 +1,16 @@
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Plus Jakarta Sans', var(--font-sans);
+  
+  /* Fallback defaults, overridden dynamically via inline styles */
+  --primary: #1E3A5F;
+  --accent: #F5A623;
+  --bg: #FFFFFF;
+  --neutral: #0F172A;
+  --neutral-light: #F8FAFC;
+  --neutral-border: #E2E8F0;
+  
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+}

@@ -61,7 +61,7 @@ const queryClient = new QueryClient({
 
 function MainAppContent() {
   const { isAuthenticated, logout, user } = useAuthStore();
-  const { sidebarOpen, toggleSidebar, activeTab, setActiveTab } = useUIStore();
+  const { sidebarOpen, toggleSidebar, activeTab, setActiveTab, zenMode } = useUIStore();
   const { resolveTenant, loading, schoolName } = useTenantStore();
   
   // Navigation tabs state is now managed globally
@@ -419,7 +419,7 @@ function MainAppContent() {
       {/* Sidebar Navigation */}
       <aside 
         className={`bg-slate-900 text-slate-100 flex flex-col justify-between transition-all duration-300 border-r border-slate-800 ${
-          sidebarOpen ? 'w-60' : 'w-16'
+          zenMode ? 'hidden w-0 border-r-0' : (sidebarOpen ? 'w-60' : 'w-16')
         }`}
       >
         <div className="space-y-6">
@@ -507,7 +507,9 @@ function MainAppContent() {
       {/* Main Panel Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header Panel */}
-        <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
+        <header className={`h-16 bg-white border-b border-neutral-200 items-center justify-between px-6 shrink-0 shadow-sm z-10 ${
+          zenMode ? 'hidden' : 'flex'
+        }`}>
           <div className="flex items-center gap-4">
             {!sidebarOpen && (
               <button 
@@ -530,8 +532,8 @@ function MainAppContent() {
         </header>
 
         {/* Scrollable Body Container */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
+        <main className={`flex-1 overflow-y-auto bg-slate-50 ${zenMode ? 'p-0' : 'p-6 lg:p-8'}`}>
+          <div className={zenMode ? 'w-full h-full' : 'max-w-7xl mx-auto'}>
             {renderTabContent()}
           </div>
         </main>

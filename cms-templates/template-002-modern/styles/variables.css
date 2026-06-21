@@ -1,0 +1,16 @@
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', var(--font-sans);
+  
+  /* Fallback defaults */
+  --primary: #0F172A;
+  --accent: #0D9488;
+  --bg: #FFFFFF;
+  --neutral: #1E293B;
+  --neutral-light: #F8FAFC;
+  --neutral-border: #F1F5F9;
+  
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+}

@@ -147,6 +147,12 @@ async def test_cms_flow():
             )
         )
         # Clear existing published folder if any
+        # Ensure all pages are published for the test to succeed
+        all_pages_to_pub = await service.list_pages()
+        for p in all_pages_to_pub:
+            await service.update_page(p.id, CMSPageUpdate(is_published=True))
+        await db.commit()
+
         if os.path.exists(published_dir):
             shutil.rmtree(published_dir)
             
@@ -159,6 +165,7 @@ async def test_cms_flow():
         pages_to_check = ["home.html", "index.html", "about.html", "admissions.html", "contact.html", "gallery.html", f"{custom_slug}.html"]
         for filename in pages_to_check:
             filepath = os.path.join(published_dir, filename)
+            print(f"Checking filepath: {filepath} (exists: {os.path.exists(filepath)})")
             assert os.path.exists(filepath)
             print(f"  Verified static file exists: {filename}")
             

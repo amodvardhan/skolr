@@ -1,0 +1,25 @@
+{
+  "id": "template-002-modern",
+  "name": "Modern Clean",
+  "description": "Sleek, minimalist, and grid-aligned. Great for urban institutions. Uses Outfit & Plus Jakarta Sans.",
+  "thumbnail": "preview/thumb.png",
+  "color_schemes": [
+    { "name": "Slate & Teal", "primary": "#0F172A", "accent": "#0D9488", "bg": "#FFFFFF" },
+    { "name": "Indigo & Rose", "primary": "#312E81", "accent": "#F43F5E", "bg": "#FAFAFA" },
+    { "name": "Minimal Dark", "primary": "#18181B", "accent": "#E4E4E7", "bg": "#09090B" }
+  ],
+  "sections": {
+    "hero":          { "required": true,  "max": 1 },
+    "stats":         { "required": false, "max": 1 },
+    "about":         { "required": false, "max": 1 },
+    "testimonials":  { "required": false, "max": 1 },
+    "faculty":       { "required": false, "max": 1 },
+    "admissions":    { "required": false, "max": 1 },
+    "gallery":       { "required": false, "max": 1 },
+    "contact":       { "required": true,  "max": 1 }
+  },
+  "fonts": {
+    "display": "Outfit",
+    "body": "Plus Jakarta Sans"
+  }
+}

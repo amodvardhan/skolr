@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status, HTTPException
+from fastapi import APIRouter, Depends, Query, status, HTTPException, File, UploadFile, Response
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -14,7 +14,8 @@ from app.services.cms import CMSService
 from app.schemas.cms import (
     CMSSiteResponse, CMSSiteUpdate, CMSSiteResponseData,
     CMSPageResponse, CMSPageCreate, CMSPageUpdate, CMSPageListResponse, CMSPageResponseData,
-    PublishResponse, PublishResponseData
+    PublishResponse, PublishResponseData,
+    CMSInquiryCreate, CMSInquiryResponse, CMSInquiryResponseData, CMSInquiryListResponse
 )
 
 router = APIRouter(prefix="/cms", tags=["CMS & Website Builder"])
@@ -63,6 +64,8 @@ async def update_site_settings(
     repo = CMSRepository(db)
     service = CMSService(repo)
     site = await service.update_site(site_data)
+    await db.commit()
+    await db.refresh(site)
     return CMSSiteResponse(data=map_site_to_schema(site), message="Website settings updated successfully")
 
 
@@ -105,6 +108,8 @@ async def create_new_page(
         raise HTTPException(status_code=400, detail="A page with this slug already exists")
         
     page = await service.create_page(page_data)
+    await db.commit()
+    await db.refresh(page)
     return CMSPageResponse(data=map_page_to_schema(page), message="Page created successfully")
 
 @router.patch("/pages/{page_id}", response_model=CMSPageResponse)
@@ -125,6 +130,8 @@ async def update_page_content(
     page = await service.update_page(page_id, page_data)
     if not page:
         raise HTTPException(status_code=404, detail="Page not found")
+    await db.commit()
+    await db.refresh(page)
     return CMSPageResponse(data=map_page_to_schema(page), message="Page content saved successfully")
 
 @router.delete("/pages/{page_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -143,15 +150,22 @@ async def delete_page_record(
         raise HTTPException(status_code=400, detail="You cannot delete the root 'home' page")
         
     await service.delete_page(page_id)
+    await db.commit()
 
 
 # --- Public Preview & Publishing ---
 @router.get("/preview/{slug}", response_class=HTMLResponse)
 async def preview_page_html(
     slug: str,
+    response: Response,
     school_id: UUID = Query(...),
     db: AsyncSession = Depends(get_db)
 ):
+    # Set headers to prevent iframe browser caching
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    
     # Manually configure tenant schema context (no auth validation needed for previews)
     from app.core.database import sanitize_schema_name
     schema_name = sanitize_schema_name(str(school_id))
@@ -185,3 +199,166 @@ async def publish_website(
         ),
         message="Your website is now live!"
     )
+
+
+import uuid
+import os
+import shutil
+
+@router.post("/upload")
+async def upload_custom_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_roles(["school_admin"]))
+):
+    if not current_user.school_id:
+        raise HTTPException(status_code=400, detail="User account is not associated with any active school tenant")
+        
+    allowed_types = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ]
+    is_image = file.content_type.startswith("image/")
+    is_allowed_doc = file.content_type in allowed_types
+    if not (is_image or is_allowed_doc):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File type not supported. Allowed: Images, PDF, Word, Excel"
+        )
+        
+    # Security check: Whitelist allowed file extensions to prevent RCE or script uploads
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    safe_extensions = {
+        ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg",
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"
+    }
+    if file_ext not in safe_extensions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File extension not allowed. Only standard images and documents are supported."
+        )
+        
+    school_id_str = str(current_user.school_id)
+    upload_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), f"../static/published/uploads/{school_id_str}")
+    )
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    file_ext = os.path.splitext(file.filename)[1]
+    if not file_ext:
+        file_ext = ".jpg"
+    unique_filename = f"{uuid.uuid4()}{file_ext}"
+    dest_path = os.path.join(upload_dir, unique_filename)
+    
+    try:
+        with open(dest_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save uploaded file: {str(e)}"
+        )
+        
+    return {
+        "success": True,
+        "url": f"/published/uploads/{school_id_str}/{unique_filename}"
+    }
+
+
+@router.get("/uploads")
+async def list_uploaded_files(
+    current_user: User = Depends(require_roles(["school_admin"]))
+):
+    if not current_user.school_id:
+        raise HTTPException(status_code=400, detail="User account is not associated with any active school tenant")
+        
+    school_id_str = str(current_user.school_id)
+    upload_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), f"../static/published/uploads/{school_id_str}")
+    )
+    
+    files_list = []
+    if os.path.exists(upload_dir):
+        for filename in os.listdir(upload_dir):
+            file_path = os.path.join(upload_dir, filename)
+            if os.path.isfile(file_path):
+                stat_info = os.stat(file_path)
+                file_ext = os.path.splitext(filename)[1].lower()
+                
+                # Simple type classification
+                file_type = "image"
+                if file_ext in [".pdf", ".doc", ".docx", ".xls", ".xlsx"]:
+                    file_type = "document"
+                    
+                files_list.append({
+                    "name": filename,
+                    "url": f"/published/uploads/{school_id_str}/{filename}",
+                    "size": stat_info.st_size,
+                    "type": file_type,
+                    "uploaded_at": datetime.fromtimestamp(stat_info.st_mtime).isoformat()
+                })
+                
+    # Sort by uploaded_at descending
+    files_list.sort(key=lambda x: x["uploaded_at"], reverse=True)
+    return {
+        "success": True,
+        "data": files_list
+    }
+
+
+
+def map_inquiry_to_schema(inq) -> CMSInquiryResponseData:
+    return CMSInquiryResponseData(
+        id=inq.id,
+        name=inq.name,
+        email=inq.email,
+        message=inq.message,
+        status=inq.status,
+        created_at=inq.created_at
+    )
+
+@router.post("/inquiries", response_model=CMSInquiryResponse)
+async def create_inquiry(
+    inquiry_data: CMSInquiryCreate,
+    school_id: UUID = Query(...),
+    db: AsyncSession = Depends(get_db)
+):
+    # Resolve school tenant schema context manually
+    from app.core.database import sanitize_schema_name
+    schema_name = sanitize_schema_name(str(school_id))
+    await db.execute(text(f"SET search_path TO {schema_name}, public"))
+    
+    repo = CMSRepository(db)
+    service = CMSService(repo)
+    inquiry = await service.create_inquiry(inquiry_data)
+    return CMSInquiryResponse(data=map_inquiry_to_schema(inquiry), message="Inquiry submitted successfully")
+
+@router.get("/inquiries", response_model=CMSInquiryListResponse)
+async def list_inquiries(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(["school_admin"]))
+):
+    repo = CMSRepository(db)
+    service = CMSService(repo)
+    inquiries = await service.list_inquiries()
+    return CMSInquiryListResponse(data=[map_inquiry_to_schema(inq) for inq in inquiries])
+
+@router.patch("/inquiries/{inquiry_id}/status", response_model=CMSInquiryResponse)
+async def update_inquiry_status(
+    inquiry_id: UUID,
+    status_val: str = Query(..., description="new, read, or resolved"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(["school_admin"]))
+):
+    if status_val not in ["new", "read", "resolved"]:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+        
+    repo = CMSRepository(db)
+    service = CMSService(repo)
+    inquiry = await service.update_inquiry_status(inquiry_id, status_val)
+    if not inquiry:
+        raise HTTPException(status_code=404, detail="Inquiry not found")
+    return CMSInquiryResponse(data=map_inquiry_to_schema(inquiry), message="Inquiry status updated")
+

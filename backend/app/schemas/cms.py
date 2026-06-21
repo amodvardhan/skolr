@@ -83,3 +83,28 @@ class PublishResponse(BaseModel):
     success: bool = True
     data: PublishResponseData
     message: str = "OK"
+
+
+# Inquiry schemas
+class CMSInquiryCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    email: str = Field(..., min_length=1, max_length=100)
+    message: str = Field(..., min_length=1, max_length=1000)
+
+class CMSInquiryResponseData(BaseModel):
+    id: UUID
+    name: str
+    email: str
+    message: str
+    status: str
+    created_at: datetime
+
+class CMSInquiryResponse(BaseModel):
+    success: bool = True
+    data: CMSInquiryResponseData
+    message: str = "OK"
+
+class CMSInquiryListResponse(BaseModel):
+    success: bool = True
+    data: List[CMSInquiryResponseData]
+    message: str = "OK"

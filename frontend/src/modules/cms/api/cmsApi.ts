@@ -58,6 +58,27 @@ export interface PublishResponse {
   message: string;
 }
 
+export interface CMSInquiry {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  status: 'new' | 'read' | 'resolved';
+  created_at: string;
+}
+
+export interface CMSInquiryResponse {
+  success: boolean;
+  data: CMSInquiry;
+  message: string;
+}
+
+export interface CMSInquiryListResponse {
+  success: boolean;
+  data: CMSInquiry[];
+  message: string;
+}
+
 export const cmsApi = {
   getSite: async (): Promise<CMSSiteResponse> => {
     const response = await api.get('/cms/site');
@@ -96,5 +117,44 @@ export const cmsApi = {
   publishSite: async (): Promise<PublishResponse> => {
     const response = await api.post('/cms/publish');
     return response.data;
+  },
+
+  uploadImage: async (file: File): Promise<{ success: boolean; url: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/cms/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  getInquiries: async (): Promise<CMSInquiryListResponse> => {
+    const response = await api.get('/cms/inquiries');
+    return response.data;
+  },
+
+  updateInquiryStatus: async (inquiryId: string, status: string): Promise<CMSInquiryResponse> => {
+    const response = await api.patch(`/cms/inquiries/${inquiryId}/status?status_val=${status}`);
+    return response.data;
+  },
+
+  getUploadedFiles: async (): Promise<UploadedFilesResponse> => {
+    const response = await api.get('/cms/uploads');
+    return response.data;
   }
 };
+
+export interface UploadedFile {
+  name: string;
+  url: string;
+  size: number;
+  type: 'image' | 'document';
+  uploaded_at: string;
+}
+
+export interface UploadedFilesResponse {
+  success: boolean;
+  data: UploadedFile[];
+}

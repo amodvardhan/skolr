@@ -4,11 +4,11 @@ from uuid import UUID
 from datetime import datetime
 from typing import List, Dict, Any, Tuple, Optional
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.models.tenant import CMSSite, CMSPage, Employee, FeeStructure, FeeStructureItem
 from app.repositories.cms import CMSRepository
-from app.schemas.cms import CMSSiteUpdate, CMSPageCreate, CMSPageUpdate
+from app.schemas.cms import CMSSiteUpdate, CMSPageCreate, CMSPageUpdate, CMSInquiryCreate
 
 DEFAULT_PAGES_SEED = [
     {
@@ -247,7 +247,27 @@ class CMSService:
             autoescape=select_autoescape(['html', 'xml'])
         )
 
+    async def ensure_inquiries_table(self):
+        try:
+            await self.repo.db.execute(text("""
+                CREATE TABLE IF NOT EXISTS cms_inquiries (
+                    id UUID PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    email VARCHAR(100) NOT NULL,
+                    message VARCHAR(1000) NOT NULL,
+                    status VARCHAR(20) DEFAULT 'new' NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    deleted_at TIMESTAMP WITH TIME ZONE
+                )
+            """))
+            await self.repo.db.commit()
+        except Exception:
+            pass
+
     async def get_site(self) -> CMSSite:
+        # Self-heal database schema if inquiries table is missing
+        await self.ensure_inquiries_table()
         site = await self.repo.get_site()
         # Seed default pages if none exist in page repository
         pages = await self.repo.list_pages()
@@ -337,8 +357,10 @@ class CMSService:
         # Build template context variables
         template_name = f"{site.template_id}/index.html"
         template_dir_path = os.path.join(self.jinja_env.loader.searchpath[0], site.template_id)
+        active_template_id = site.template_id
         if not os.path.exists(template_dir_path):
             template_name = "template-001-prestige/index.html"
+            active_template_id = "template-001-prestige"
         
         # Resolve active color scheme color settings
         color_theme = {
@@ -369,7 +391,9 @@ class CMSService:
             "theme": color_theme,
             "erp": erp_data,
             "preview_mode": True,
-            "school_id": str(school_id)
+            "school_id": str(school_id),
+            "active_template_id": active_template_id,
+            "cache_bust": str(datetime.utcnow().timestamp())
         }
 
         try:
@@ -484,3 +508,88 @@ class CMSService:
         # Return local browsing URL endpoint
         public_url = f"/published/{str(school_id)}/index.html"
         return True, public_url
+
+    async def create_inquiry(self, data: CMSInquiryCreate) -> Any:
+        # Self-heal table schema if missing
+        await self.ensure_inquiries_table()
+        import uuid
+        inquiry_id = uuid.uuid4()
+        now = datetime.utcnow()
+        await self.repo.db.execute(text("""
+            INSERT INTO cms_inquiries (id, name, email, message, status, created_at, updated_at)
+            VALUES (:id, :name, :email, :message, :status, :created_at, :updated_at)
+        """), {
+            "id": inquiry_id,
+            "name": data.name,
+            "email": data.email,
+            "message": data.message,
+            "status": "new",
+            "created_at": now,
+            "updated_at": now
+        })
+        await self.repo.db.commit()
+        
+        class MockInquiry:
+            def __init__(self, id, name, email, message, status, created_at):
+                self.id = id
+                self.name = name
+                self.email = email
+                self.message = message
+                self.status = status
+                self.created_at = created_at
+        return MockInquiry(inquiry_id, data.name, data.email, data.message, "new", now)
+
+    async def list_inquiries(self) -> List[Any]:
+        await self.ensure_inquiries_table()
+        result = await self.repo.db.execute(text("""
+            SELECT id, name, email, message, status, created_at
+            FROM cms_inquiries
+            WHERE deleted_at IS NULL
+            ORDER BY created_at DESC
+        """))
+        rows = result.fetchall()
+        
+        class MockInquiry:
+            def __init__(self, id, name, email, message, status, created_at):
+                self.id = id
+                self.name = name
+                self.email = email
+                self.message = message
+                self.status = status
+                self.created_at = created_at
+                
+        return [MockInquiry(r.id, r.name, r.email, r.message, r.status, r.created_at) for r in rows]
+
+    async def update_inquiry_status(self, inquiry_id: UUID, status: str) -> Optional[Any]:
+        await self.ensure_inquiries_table()
+        result = await self.repo.db.execute(text("""
+            SELECT id, name, email, message, status, created_at
+            FROM cms_inquiries
+            WHERE id = :id AND deleted_at IS NULL
+        """), {"id": inquiry_id})
+        row = result.fetchone()
+        if not row:
+            return None
+            
+        now = datetime.utcnow()
+        await self.repo.db.execute(text("""
+            UPDATE cms_inquiries
+            SET status = :status, updated_at = :updated_at
+            WHERE id = :id
+        """), {
+            "id": inquiry_id,
+            "status": status,
+            "updated_at": now
+        })
+        await self.repo.db.commit()
+        
+        class MockInquiry:
+            def __init__(self, id, name, email, message, status, created_at):
+                self.id = id
+                self.name = name
+                self.email = email
+                self.message = message
+                self.status = status
+                self.created_at = created_at
+                
+        return MockInquiry(inquiry_id, row.name, row.email, row.message, status, row.created_at)
