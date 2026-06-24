@@ -14,6 +14,7 @@ import {
 
 import { examsApi } from '../api/examsApi';
 import { useAuthStore } from '../../../stores/authStore';
+import { confirm } from '../../../stores/useConfirmStore';
 
 const gradeScaleSchema = z.object({
   min_percentage: z.coerce.number().min(0, "Percentage must be >= 0").max(100, "Percentage must be <= 100"),
@@ -86,11 +87,12 @@ export function GradeScalePage() {
     createMutation.mutate(values);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this grade scale? This might affect automated grade assignments.')) {
+  const handleDelete = async (id: string) => {
+    if (await confirm('Are you sure you want to delete this grade scale? This might affect automated grade assignments.', { type: 'danger', title: 'Delete Grade Scale' })) {
       deleteMutation.mutate(id);
     }
   };
+
 
   return (
     <div className="space-y-6">

@@ -153,6 +153,38 @@ async def seed_database():
             await session.commit()
             await session.refresh(parent_user)
 
+        # Seed corporate / super admin users for testing the Corporate Hub
+        res_super = await session.execute(select(User).where(User.email == "super@skolr.com"))
+        super_user = res_super.scalar_one_or_none()
+        if not super_user:
+            logger.info("Seeding default platform super admin user...")
+            super_user = User(
+                email="super@skolr.com",
+                hashed_password=get_password_hash("admin123"),
+                first_name="Platform",
+                last_name="Super",
+                role="super_admin",
+                is_active=True
+            )
+            session.add(super_user)
+            await session.commit()
+
+        res_chain_a = await session.execute(select(User).where(User.email == "director@dav.com"))
+        chain_a_user = res_chain_a.scalar_one_or_none()
+        if not chain_a_user:
+            logger.info("Seeding default chain admin user...")
+            chain_a_user = User(
+                email="director@dav.com",
+                hashed_password=get_password_hash("admin123"),
+                first_name="DAV",
+                last_name="Director",
+                role="chain_admin",
+                chain_id="dav_chain",
+                is_active=True
+            )
+            session.add(chain_a_user)
+            await session.commit()
+
         # Seeding tenant structures inside school_school_default
         result = await session.execute(text(f"SELECT COUNT(*) FROM {DEFAULT_SCHEMA_NAME}.academic_years"))
         ay_count = result.scalar()

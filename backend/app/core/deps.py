@@ -44,8 +44,18 @@ async def get_current_user(
     if user.school_id:
         schema_name = sanitize_schema_name(str(user.school_id))
         await db.execute(text(f"SET search_path TO {schema_name}, public"))
+    
+    # Set session context variables for Row Level Security (RLS) on shared schemas
+    user_role = user.role or ""
+    user_chain = user.chain_id or ""
+    try:
+        await db.execute(text("SELECT set_config('app.current_role', :role, true)"), {"role": user_role})
+        await db.execute(text("SELECT set_config('app.current_chain_id', :chain_id, true)"), {"chain_id": user_chain})
+    except Exception:
+        pass
         
     return user
+
 
 def require_roles(allowed_roles: List[str]):
     async def role_checker(current_user: Annotated[User, Depends(get_current_user)]):

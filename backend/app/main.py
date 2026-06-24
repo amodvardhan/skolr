@@ -8,7 +8,7 @@ import logging
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.middleware import TenantLoggingMiddleware
-from app.routers import auth, tenants, students, attendance, fees, dashboard, employee, academics, exams, notifications, cbse, cms, parent
+from app.routers import auth, tenants, students, attendance, fees, dashboard, employee, academics, exams, notifications, cbse, cms, parent, corporate
 
 # Setup logger
 logging.basicConfig(level=logging.INFO)
@@ -21,6 +21,42 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+@app.on_event("startup")
+async def startup_db_init():
+    from app.core.database import engine, SkolrBase
+    async with engine.begin() as conn:
+        logger.info("Initializing public tables...")
+        await conn.execute(text("CREATE SCHEMA IF NOT EXISTS public"))
+        
+        # Dynamically add chain_id to existing tables if they exist
+        try:
+            await conn.execute(text("ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS chain_id VARCHAR(50)"))
+            await conn.execute(text("ALTER TABLE public.users ADD COLUMN IF NOT EXISTS chain_id VARCHAR(50)"))
+        except Exception as e:
+            logger.warning(f"Could not dynamically alter tables on startup: {str(e)}")
+
+        # Filter metadata tables to only create public tables
+        public_tables = [table for table in SkolrBase.metadata.tables.values() if table.schema == "public"]
+        await conn.run_sync(lambda connection: SkolrBase.metadata.create_all(connection, tables=public_tables))
+
+        
+        # Apply Row Level Security as additional security tier
+        try:
+            await conn.execute(text("ALTER TABLE public.corporate_analytics ENABLE ROW LEVEL SECURITY"))
+            await conn.execute(text("ALTER TABLE public.corporate_analytics FORCE ROW LEVEL SECURITY"))
+            await conn.execute(text("DROP POLICY IF EXISTS corporate_analytics_policy ON public.corporate_analytics"))
+            await conn.execute(text("""
+                CREATE POLICY corporate_analytics_policy ON public.corporate_analytics
+                USING (
+                    current_setting('app.current_role', true) = 'super_admin'
+                    OR chain_id = current_setting('app.current_chain_id', true)
+                )
+            """))
+            logger.info("RLS database policy successfully applied to corporate_analytics.")
+        except Exception as e:
+            logger.warning(f"Could not apply database RLS policies (non-Postgres environment or limited privileges): {str(e)}")
+
 
 # Configure CORS
 # In production, this should be locked down to tenant domains and the admin dashboard domain.
@@ -56,6 +92,8 @@ app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(cbse.router, prefix="/api/v1")
 app.include_router(cms.router, prefix="/api/v1")
 app.include_router(parent.router, prefix="/api/v1")
+app.include_router(corporate.router, prefix="/api/v1")
+
 
 # Mount Static Files for Published School Websites
 from fastapi.staticfiles import StaticFiles

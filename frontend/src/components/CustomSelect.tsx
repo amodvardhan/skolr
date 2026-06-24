@@ -32,34 +32,34 @@ export function CustomSelect({
         <button
           type="button"
           className={cn(
-            "flex h-10 w-full items-center justify-between rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm shadow-sm transition hover:bg-neutral-50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:opacity-50",
+            "flex h-11 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm transition hover:bg-slate-50 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-sm",
             className
           )}
         >
-          <span className={cn("truncate", !selectedOption && "text-neutral-400")}>
+          <span className={cn("truncate font-sans font-medium text-slate-800", !selectedOption && "text-slate-400 font-normal")}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
-          <ChevronDown className="h-4 w-4 text-neutral-400 shrink-0 ml-2" />
+          <ChevronDown className="h-4.5 w-4.5 text-slate-400 shrink-0 ml-2" />
         </button>
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align="start"
-          className="z-50 min-w-[var(--radix-dropdown-menu-trigger-width)] max-h-60 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-1 shadow-lg animate-in fade-in-80 slide-in-from-top-1 duration-100"
+          className="z-50 min-w-[var(--radix-dropdown-menu-trigger-width)] max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.06)] animate-in fade-in-80 slide-in-from-top-1 duration-100"
         >
           {options.map((option) => (
             <DropdownMenu.Item
               key={option.value}
               onSelect={() => onChange(option.value)}
               className={cn(
-                "flex items-center justify-between rounded-lg px-2.5 py-2 text-sm text-neutral-700 outline-none cursor-pointer transition select-none hover:bg-neutral-50 hover:text-neutral-900 focus:bg-neutral-50 focus:text-neutral-900",
-                option.value === value && "bg-blue-50 text-blue-900 font-medium hover:bg-blue-50 focus:bg-blue-50"
+                "flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-slate-700 outline-none cursor-pointer transition select-none hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900 font-sans font-medium mb-0.5 last:mb-0",
+                option.value === value && "bg-blue-50 text-blue-900 font-semibold hover:bg-blue-50 focus:bg-blue-50"
               )}
             >
               <span>{option.label}</span>
               {option.value === value && (
-                <Check className="h-4 w-4 text-primary shrink-0 ml-2" />
+                <Check className="h-4 w-4 text-blue-700 shrink-0 ml-2" />
               )}
             </DropdownMenu.Item>
           ))}

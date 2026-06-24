@@ -60,3 +60,7 @@ secrets.json
 
 # WeasyPrint PDF reports generated locally (if any)
 *.pdf
+
+# Graphify
+graphify-out/
+.graphify/

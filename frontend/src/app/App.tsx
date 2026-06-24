@@ -15,7 +15,8 @@ import {
   BookOpen,
   MessageSquare,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Building2
 } from 'lucide-react';
 
 import { SubjectConfigPage } from '../modules/academics/pages/SubjectConfigPage';
@@ -23,6 +24,8 @@ import { HomeworkListPage } from '../modules/academics/pages/HomeworkListPage';
 import { HomeworkDetailPage } from '../modules/academics/pages/HomeworkDetailPage';
 import { ExamSchedulePage } from '../modules/exams/pages/ExamSchedulePage';
 import { MarksEntryPage } from '../modules/exams/pages/MarksEntryPage';
+import { CorporateHubPage } from '../modules/corporate/pages/CorporateHubPage';
+
 import { GradeScalePage } from '../modules/exams/pages/GradeScalePage';
 import { AnnouncementsPage } from '../modules/notifications/pages/AnnouncementsPage';
 import { NotificationLogsPage } from '../modules/notifications/pages/NotificationLogsPage';
@@ -57,6 +60,8 @@ import { ParentAcademicsPage } from '../modules/parent/pages/ParentAcademicsPage
 import { ParentFeesPage } from '../modules/parent/pages/ParentFeesPage';
 import { parentApi } from '../modules/parent/api/parentApi';
 import { Toaster } from '../components/Toaster';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+
 
 // Create a client
 const queryClient = new QueryClient({
@@ -166,8 +171,14 @@ function MainAppContent() {
         { id: 'notifications', name: 'Announcements', icon: MessageSquare },
       ];
     }
-    // Default / Admin full access
-    return [
+    if (role === 'chain_admin') {
+      return [
+        { id: 'corporate_hub', name: 'Corporate Hub', icon: Building2 },
+      ];
+    }
+    
+    // Default / Admin full access (school_admin)
+    const adminItems = [
       { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
       { id: 'students', name: 'Students', icon: Users },
       { id: 'attendance', name: 'Attendance', icon: CalendarCheck },
@@ -181,16 +192,26 @@ function MainAppContent() {
       { id: 'employees', name: 'Staff Directory', icon: Contact },
       { id: 'settings', name: 'Settings', icon: Settings },
     ];
+
+    if (role === 'super_admin') {
+      return [
+        { id: 'corporate_hub', name: 'Corporate Hub', icon: Building2 },
+        ...adminItems
+      ];
+    }
+    
+    return adminItems;
   };
 
   const navItems = getNavItems();
 
   // Helper to render body based on active tab
   const renderTabContent = () => {
-    // Enforce Tab RBAC: if the activeTab is not present in navItems list, fallback to dashboard
+    // Enforce Tab RBAC: if the activeTab is not present in navItems list, fallback to first allowed tab
     const isTabAllowed = navItems.some(item => item.id === activeTab);
     if (!isTabAllowed) {
-      setTimeout(() => setActiveTab('dashboard'), 0);
+      const defaultTab = navItems[0]?.id || 'dashboard';
+      setTimeout(() => setActiveTab(defaultTab), 0);
       return null;
     }
 
@@ -210,6 +231,8 @@ function MainAppContent() {
     }
 
     switch (activeTab) {
+      case 'corporate_hub':
+        return <CorporateHubPage />;
       case 'dashboard':
         return <DashboardPage />;
       case 'students':
@@ -510,16 +533,16 @@ function MainAppContent() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+    <div className="flex h-screen bg-slate-100/60 overflow-hidden font-sans p-3 lg:p-4 gap-4 academic-mesh-grid">
       {/* Sidebar Navigation */}
       <aside 
-        className={`bg-slate-900 text-slate-100 flex flex-col justify-between transition-all duration-300 border-r border-slate-800 ${
-          zenMode ? 'hidden w-0 border-r-0' : (sidebarOpen ? 'w-60' : 'w-16')
+        className={`bg-slate-950 text-slate-100 flex flex-col justify-between transition-all duration-300 border border-slate-900 rounded-2xl shadow-xl ${
+          zenMode ? 'hidden w-0 border-none' : (sidebarOpen ? 'w-64' : 'w-20')
         }`}
       >
         <div className="space-y-6">
           {/* Sidebar Top: Logo */}
-          <div className="h-16 flex items-center px-4 justify-between border-b border-slate-800">
+          <div className="h-20 flex items-center px-5 justify-between border-b border-slate-900">
             <div className="flex items-center gap-2.5 overflow-hidden">
               <GraduationCap className="h-7 w-7 text-amber-500 shrink-0" />
               {sidebarOpen && (
@@ -531,7 +554,7 @@ function MainAppContent() {
             {sidebarOpen && (
               <button 
                 onClick={toggleSidebar}
-                className="text-slate-400 hover:text-white transition"
+                className="text-slate-400 hover:text-white transition cursor-pointer"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
@@ -539,7 +562,7 @@ function MainAppContent() {
           </div>
 
           {/* Nav Links */}
-          <nav className="px-2 space-y-1.5">
+          <nav className="px-3 space-y-1.5">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -554,10 +577,12 @@ function MainAppContent() {
                     setAcademicsSubView('list');
                   }
                 }}
-                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150 ${
+                className={`w-full flex items-center rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                  sidebarOpen ? 'gap-3.5 px-4 py-3' : 'justify-center p-3.5'
+                } ${
                   activeTab === item.id 
-                    ? 'bg-primary text-white' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-750 text-white shadow-lg shadow-blue-600/15' 
+                    : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
                 }`}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
@@ -568,21 +593,21 @@ function MainAppContent() {
         </div>
 
         {/* Sidebar Footer: User / Logout */}
-        <div className="p-2 border-t border-slate-800 bg-slate-950/40">
+        <div className="p-3 border-t border-slate-900 bg-slate-950/40 rounded-b-2xl">
           {sidebarOpen ? (
-            <div className="flex items-center justify-between gap-2 p-2">
+            <div className="flex items-center justify-between gap-2 p-2 bg-slate-900/50 border border-slate-900 rounded-xl">
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-white truncate">
+                <div className="text-xs font-bold text-white truncate font-display">
                   {user?.firstName} {user?.lastName}
                 </div>
-                <div className="text-[10px] text-slate-450 truncate">
+                <div className="text-[10px] text-slate-450 truncate font-mono mt-0.5">
                   {user?.email}
                 </div>
               </div>
               <button 
                 onClick={logout}
                 title="Logout"
-                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-850 rounded-lg transition"
+                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
               >
                 <LogOut className="h-4.5 w-4.5" />
               </button>
@@ -591,7 +616,7 @@ function MainAppContent() {
             <button 
               onClick={logout}
               title="Logout"
-              className="w-full flex justify-center py-2 text-slate-400 hover:text-white transition"
+              className="w-full flex justify-center py-3 text-slate-400 hover:text-rose-450 hover:bg-rose-500/10 rounded-xl transition cursor-pointer"
             >
               <LogOut className="h-5 w-5" />
             </button>
@@ -600,21 +625,21 @@ function MainAppContent() {
       </aside>
 
       {/* Main Panel Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm">
         {/* Top Header Panel */}
-        <header className={`h-16 bg-white border-b border-neutral-200 items-center justify-between px-6 shrink-0 shadow-sm z-10 ${
+        <header className={`h-20 bg-white border-b border-slate-100 items-center justify-between px-8 shrink-0 z-10 ${
           zenMode ? 'hidden' : 'flex'
         }`}>
           <div className="flex items-center gap-4">
             {!sidebarOpen && (
               <button 
                 onClick={toggleSidebar}
-                className="text-neutral-500 hover:text-neutral-900 transition"
+                className="text-slate-500 hover:text-slate-900 transition cursor-pointer p-1.5 hover:bg-slate-50 rounded-lg"
               >
                 <Menu className="h-5 w-5" />
               </button>
             )}
-            <div className="font-display font-bold text-neutral-800 text-lg">
+            <div className="font-display font-bold text-slate-800 text-lg">
               {schoolName || 'School Portal'}
             </div>
           </div>
@@ -622,11 +647,11 @@ function MainAppContent() {
           <div className="flex items-center gap-3">
             {user?.role === 'parent' && siblingRes?.data && siblingRes.data.length > 0 && (
               <div className="flex items-center gap-2 mr-2">
-                <span className="text-xs text-neutral-500 font-semibold font-display">Student:</span>
+                <span className="text-xs text-slate-505 font-bold font-display">Student:</span>
                 <select
                   value={activeStudentId}
                   onChange={(e) => setActiveStudentId(e.target.value)}
-                  className="text-xs font-semibold bg-neutral-50 hover:bg-neutral-100 text-neutral-800 px-3 py-1.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary transition cursor-pointer"
+                  className="text-xs font-bold bg-slate-50 hover:bg-slate-100 text-slate-800 px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 transition cursor-pointer"
                 >
                   {siblingRes.data.map((student: any) => (
                     <option key={student.id} value={student.id}>
@@ -636,15 +661,16 @@ function MainAppContent() {
                 </select>
               </div>
             )}
-            <span className="text-xs font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-200">
+            <span className="text-xs font-bold font-mono bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1.5">
+              <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse"></span>
               DBMS ONLINE
             </span>
           </div>
         </header>
 
         {/* Scrollable Body Container */}
-        <main className={`flex-1 overflow-y-auto bg-slate-50 ${zenMode ? 'p-0' : 'p-6 lg:p-8'}`}>
-          <div className={zenMode ? 'w-full h-full' : 'max-w-7xl mx-auto'}>
+        <main className={`flex-1 overflow-y-auto bg-slate-50/50 ${zenMode ? 'p-0' : 'p-6 lg:p-8'}`}>
+          <div className={zenMode ? 'w-full h-full' : 'max-w-7xl mx-auto animate-scale-in'}>
             {renderTabContent()}
           </div>
         </main>
@@ -658,6 +684,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <MainAppContent />
       <Toaster />
+      <ConfirmDialog />
     </QueryClientProvider>
   );
 }

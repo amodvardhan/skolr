@@ -54,33 +54,33 @@ export function DashboardPage() {
       value: isLoading ? '...' : (statsData?.total_students ?? 0).toString(),
       change: 'Active status',
       icon: Users,
-      color: 'bg-blue-500/10 text-blue-600',
+      color: 'bg-blue-50 text-blue-700 border-blue-100',
     },
     {
       name: 'Active Employees',
       value: isLoading ? '...' : (statsData?.active_employees ?? 0).toString(),
       change: 'Administration',
       icon: GraduationCap,
-      color: 'bg-green-500/10 text-green-600',
+      color: 'bg-emerald-50 text-emerald-700 border-emerald-100',
     },
     {
       name: 'Fee Collection',
       value: isLoading ? '...' : `₹ ${(statsData?.total_fees_collected ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      change: 'Outstanding balance tracking',
+      change: 'Outstanding tracking',
       icon: IndianRupee,
-      color: 'bg-amber-500/10 text-accent',
+      color: 'bg-amber-55 text-amber-700 border-amber-100',
     },
     {
       name: 'Current Term',
       value: isLoading ? '...' : (statsData?.current_term ?? '2025-26'),
       change: 'Academic Year active',
       icon: CalendarDays,
-      color: 'bg-purple-500/10 text-purple-600',
+      color: 'bg-indigo-50 text-indigo-700 border-indigo-100',
     },
   ];
 
   const quickNavs = [
-    { name: 'Students', tab: 'students' },
+    { name: 'Students Directory', tab: 'students' },
     { name: 'Fees Ledger', tab: 'fees' },
     { name: 'Attendance marking', tab: 'attendance' }
   ];
@@ -88,20 +88,20 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Top Banner Greeting */}
-      <div className="bg-gradient-to-r from-primary to-blue-800 text-white rounded-2xl p-6 lg:p-8 shadow-sm border border-blue-900/10 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-700 via-indigo-850 to-indigo-950 text-white rounded-2xl p-6 lg:p-8 shadow-sm border border-blue-900/10 relative overflow-hidden">
         {/* Glow effect */}
         <div className="absolute right-0 top-0 w-80 h-80 bg-white/5 rounded-full blur-3xl translate-x-20 -translate-y-20"></div>
         
-        <div className="relative z-10 space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-xs font-semibold tracking-wide backdrop-blur-sm">
+        <div className="relative z-10 space-y-3.5 max-w-2xl">
+          <div className="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-white/10 backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5 text-amber-300" />
             Phase 1 Core ERP Activated
           </div>
-          <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight">
+          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight font-display text-white">
             Welcome to {schoolName || 'School Portal'}
           </h1>
-          <p className="text-blue-100 text-sm md:text-base">
-            You are signed in as <span className="font-semibold">{user?.firstName} {user?.lastName}</span> ({user?.role}). Manage admissions, trace fee ledgers, and track attendance from this panel.
+          <p className="text-slate-200 text-sm leading-relaxed font-sans font-medium">
+            You are signed in as <span className="font-bold text-white">{user?.firstName} {user?.lastName}</span> ({user?.role}). Manage student details, trace fee ledgers, and check daily attendance rosters.
           </p>
         </div>
       </div>
@@ -109,20 +109,20 @@ export function DashboardPage() {
       {/* Grid of Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
-          <div key={idx} className="card flex items-center justify-between hover:shadow-md transition duration-200">
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+          <div key={idx} className="card flex items-center justify-between hover:shadow-md hover:border-slate-300 transition-all duration-300 hover:scale-101">
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block font-sans">
                 {stat.name}
               </span>
-              <div className="text-3xl font-extrabold text-neutral-900 tracking-tight">
+              <div className="text-2xl font-black text-slate-900 tracking-tight font-display">
                 {stat.value}
               </div>
-              <span className="text-xs text-neutral-400 block font-medium">
+              <span className="text-[11px] text-slate-400 font-semibold font-sans block">
                 {stat.change}
               </span>
             </div>
-            <div className={`p-3 rounded-xl ${stat.color}`}>
-              <stat.icon className="h-6 w-6" />
+            <div className={`p-3 rounded-xl border shrink-0 flex items-center justify-center ${stat.color}`}>
+              <stat.icon className="h-5.5 w-5.5" />
             </div>
           </div>
         ))}
@@ -133,51 +133,51 @@ export function DashboardPage() {
         {/* Left 2 cols: Main Action areas */}
         <div className="lg:col-span-2 space-y-6">
           <div className="card space-y-4">
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="section-title">Preseeded Student Record</h3>
-              <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">
-                Active Record
+              <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-100 font-mono">
+                ACTIVE
               </span>
             </div>
             
             {isStudentLoading ? (
               <div className="flex justify-center items-center py-6">
-                <span className="border-2 border-primary border-t-transparent w-6 h-6 rounded-full animate-spin"></span>
+                <span className="border-2 border-blue-600 border-t-transparent w-5 h-5 rounded-full animate-spin"></span>
               </div>
             ) : firstStudent ? (
-              <div className="flex items-center gap-4 bg-neutral-50 p-4 rounded-xl border border-neutral-100">
-                <div className="h-12 w-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold text-lg">
+              <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/60 transition hover:bg-slate-100/50">
+                <div className="h-12 w-12 bg-blue-100 text-blue-700 border border-blue-200 rounded-xl flex items-center justify-center font-bold text-base font-display shadow-sm">
                   {firstStudent.first_name[0]}{firstStudent.last_name[0]}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-neutral-900">{firstStudent.first_name} {firstStudent.last_name}</h4>
-                  <p className="text-xs text-neutral-500">
-                    Admission No: <span className="font-mono font-medium">{firstStudent.admission_number}</span> | Class: Class {studentClassName}
+                  <h4 className="font-bold text-slate-900 text-sm font-display">{firstStudent.first_name} {firstStudent.last_name}</h4>
+                  <p className="text-xs text-slate-500 font-sans mt-0.5 font-medium">
+                    Admission: <span className="font-mono font-bold text-slate-700">{firstStudent.admission_number}</span> | Class {studentClassName}
                   </p>
                 </div>
                 <div className="ml-auto text-right">
-                  <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider block">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-sans">
                     Roll Number
                   </span>
-                  <span className="text-sm font-bold text-neutral-800">{firstStudent.roll_number ?? '-'}</span>
+                  <span className="text-sm font-bold text-slate-800 font-mono">{firstStudent.roll_number ?? '-'}</span>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-6 bg-neutral-50 border border-neutral-100 rounded-xl space-y-2 text-center p-4">
-                <p className="text-sm text-neutral-500 font-medium">
+              <div className="flex flex-col items-center justify-center py-6 bg-slate-50 border border-slate-200/60 rounded-xl space-y-2 text-center p-4">
+                <p className="text-xs text-slate-500 font-bold font-sans">
                   No students have been admitted to this school tenant yet.
                 </p>
                 <button
                   type="button"
                   onClick={() => setActiveTab('students')}
-                  className="text-xs font-bold text-primary hover:underline"
+                  className="text-xs font-bold text-blue-700 hover:underline cursor-pointer"
                 >
                   Admit your first student →
                 </button>
               </div>
             )}
 
-            <p className="text-sm text-neutral-500 leading-relaxed">
+            <p className="text-xs text-slate-550 leading-relaxed font-medium">
               This record is loaded directly from your dynamic tenant schema (`school_${schoolId?.replace(/-/g, '_') || 'default'}`) using the search path interceptor in our FastAPI application.
             </p>
           </div>
@@ -189,12 +189,12 @@ export function DashboardPage() {
                 <div 
                   key={i} 
                   onClick={() => setActiveTab(nav.tab)}
-                  className="border border-neutral-200 hover:border-primary/50 cursor-pointer rounded-xl p-4 flex items-center justify-between group transition hover:bg-neutral-50"
+                  className="border border-slate-200 hover:border-blue-600/50 hover:bg-blue-50/10 cursor-pointer rounded-xl p-4 flex items-center justify-between group transition duration-200"
                 >
-                  <span className="font-medium text-sm text-neutral-700 group-hover:text-primary transition">
+                  <span className="font-bold text-xs text-slate-700 group-hover:text-blue-700 transition">
                     {nav.name}
                   </span>
-                  <ChevronRight className="h-4 w-4 text-neutral-400 group-hover:text-primary transition" />
+                  <ChevronRight className="h-4.5 w-4.5 text-slate-450 group-hover:text-blue-700 transition transform group-hover:translate-x-0.5 duration-200" />
                 </div>
               ))}
             </div>
@@ -203,45 +203,48 @@ export function DashboardPage() {
 
         {/* Right Col: Admin / Tenant Details */}
         <div className="space-y-6">
-          <div className="card space-y-4 bg-slate-900 text-slate-100 border-none">
-            <h3 className="text-md font-bold tracking-tight text-white flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-amber-500" />
+          <div className="card space-y-4 bg-slate-900 border border-slate-950 text-slate-200 relative overflow-hidden">
+            {/* Soft decorative visual badge */}
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl translate-x-4 -translate-y-4"></div>
+
+            <h3 className="text-sm font-bold tracking-tight text-white flex items-center gap-2 border-b border-slate-800 pb-3 font-display">
+              <Building2 className="h-4.5 w-4.5 text-amber-500" />
               Tenant Context
             </h3>
             
-            <div className="space-y-3 text-sm">
-              <div className="border-b border-slate-800 pb-2">
-                <span className="text-slate-400 text-xs uppercase block font-semibold tracking-wider">
+            <div className="space-y-3.5 text-xs font-sans font-medium">
+              <div>
+                <span className="text-slate-450 text-[10px] uppercase block font-bold tracking-wider">
                   School Name (DB)
                 </span>
-                <span className="font-sans text-sm font-bold text-slate-100 block mt-0.5">
+                <span className="text-sm font-bold text-white block mt-0.5">
                   {schoolName || 'Prestige Public School'}
                 </span>
               </div>
 
-              <div className="border-b border-slate-800 pb-2">
-                <span className="text-slate-400 text-xs uppercase block font-semibold tracking-wider">
+              <div>
+                <span className="text-slate-450 text-[10px] uppercase block font-bold tracking-wider">
                   Active Tenant UUID
                 </span>
-                <span className="font-mono text-xs text-slate-200 block break-all mt-0.5">
+                <span className="font-mono text-xs text-slate-300 block break-all mt-0.5">
                   {schoolId}
                 </span>
               </div>
 
-              <div className="border-b border-slate-800 pb-2">
-                <span className="text-slate-400 text-xs uppercase block font-semibold tracking-wider">
+              <div>
+                <span className="text-slate-450 text-[10px] uppercase block font-bold tracking-wider">
                   Database Schema
                 </span>
-                <span className="font-mono text-xs text-slate-200 block mt-0.5">
+                <span className="font-mono text-xs text-slate-350 block mt-0.5">
                   school_{schoolId?.replace(/-/g, '_') || 'default'}
                 </span>
               </div>
 
-              <div>
-                <span className="text-slate-400 text-xs uppercase block font-semibold tracking-wider">
+              <div className="pt-2 border-t border-slate-800/80">
+                <span className="text-slate-450 text-[10px] uppercase block font-bold tracking-wider">
                   Active User Session
                 </span>
-                <span className="text-slate-200 block mt-0.5">
+                <span className="text-slate-300 block mt-0.5">
                   {user?.email}
                 </span>
               </div>
@@ -250,17 +253,17 @@ export function DashboardPage() {
 
           <div className="card space-y-4">
             <h3 className="section-title flex items-center gap-2">
-              <Clock className="h-5 w-5 text-neutral-400" />
-              Server Latency Tracker
+              <Clock className="h-4.5 w-4.5 text-slate-450" />
+              Server Connection
             </h3>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-slate-500 leading-relaxed font-medium">
               The API client injects the `X-Process-Time` header to display backend execution times.
             </p>
-            <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-3 text-center">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider block">
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 text-center">
+              <span className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">
                 Average Latency
               </span>
-              <span className="text-2xl font-bold font-mono text-neutral-800">
+              <span className="text-xl font-bold font-mono text-slate-800 mt-1 block">
                 &lt; 10ms
               </span>
             </div>

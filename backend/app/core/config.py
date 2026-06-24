@@ -26,4 +26,8 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_ID: str | None = None
     RAZORPAY_KEY_SECRET: str | None = None
 
+    # Gemini AI Key
+    GEMINI_API_KEY: str | None = None
+
 settings = Settings()
+

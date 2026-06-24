@@ -12,6 +12,7 @@ import {
 
 import { studentApi, StudentFilters } from '../api/studentApi';
 import { CustomSelect } from '../../../components/CustomSelect';
+import { confirm } from '../../../stores/useConfirmStore';
 
 interface StudentListPageProps {
   onAdmitClick: () => void;
@@ -45,7 +46,7 @@ export function StudentListPage({ onAdmitClick, onViewDetails }: StudentListPage
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this student record?')) {
+    if (await confirm('Are you sure you want to delete this student record?', { type: 'danger', title: 'Delete Student Record' })) {
       try {
         await studentApi.delete(id);
         refetch();
@@ -55,6 +56,7 @@ export function StudentListPage({ onAdmitClick, onViewDetails }: StudentListPage
       }
     }
   };
+
 
   const studentsList = data?.data || [];
   const pagination = data?.pagination || { page: 1, per_page: 10, total: 0, pages: 1 };

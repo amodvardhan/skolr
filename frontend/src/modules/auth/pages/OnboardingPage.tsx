@@ -100,7 +100,6 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
 
       const { school_id } = response.data;
       
-      // Update tenant store so that the login page can resolve it immediately
       useTenantStore.setState({
         schoolId: school_id,
         schoolName: data.name,
@@ -160,50 +159,50 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 text-slate-150">
-        <div className="w-full max-w-xl bg-slate-900/50 border border-slate-800 rounded-3xl p-8 text-center space-y-6 backdrop-blur-md relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-slate-800 relative academic-mesh-grid">
+        <div className="w-full max-w-xl bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-6 relative shadow-sm">
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-t-2xl"></div>
           
-          <div className="h-16 w-16 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-2 border border-emerald-500/20">
-            <CheckCircle2 className="h-10 w-10 animate-pulse" />
+          <div className="h-16 w-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-2 border border-emerald-100">
+            <CheckCircle2 className="h-10 w-10" />
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">Onboarding Completed!</h2>
-            <p className="text-slate-400">
-              Your school database, custom isolated schema, and administrative structures have been successfully provisioned.
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Onboarding Completed!</h2>
+            <p className="text-slate-500 text-sm leading-relaxed">
+              Your school database, isolated schema workspace, and admin access have been successfully provisioned.
             </p>
           </div>
 
-          <div className="bg-slate-950/60 rounded-2xl p-6 border border-slate-800 text-left space-y-4">
-            <h4 className="font-semibold text-white border-b border-slate-800 pb-2 text-sm uppercase tracking-wide">Provisioning Report</h4>
-            <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs font-medium">
+          <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 text-left space-y-4 font-sans">
+            <h4 className="font-bold text-slate-800 border-b border-slate-200 pb-2 text-xs uppercase tracking-wider font-display">Provisioning Report</h4>
+            <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs font-semibold">
               <div>
-                <span className="text-slate-500 block">School Name</span>
-                <span className="text-slate-200 text-sm">{schoolNameVal}</span>
+                <span className="text-slate-400 block uppercase text-[10px] tracking-wider">School Name</span>
+                <span className="text-slate-800 text-sm mt-0.5">{schoolNameVal}</span>
               </div>
               <div>
-                <span className="text-slate-500 block">Assigned Tenant Portal</span>
-                <span className="text-amber-500 text-sm font-mono font-bold">{subdomainVal}.skolr.in</span>
+                <span className="text-slate-400 block uppercase text-[10px] tracking-wider">Assigned Subdomain</span>
+                <span className="text-blue-700 text-sm font-mono mt-0.5 font-bold">{subdomainVal}.skolr.in</span>
               </div>
               <div>
-                <span className="text-slate-500 block">Schema Namespace</span>
-                <span className="text-slate-200 text-sm font-mono font-bold">school_{subdomainVal}</span>
+                <span className="text-slate-400 block uppercase text-[10px] tracking-wider">Schema Namespace</span>
+                <span className="text-slate-800 text-sm font-mono mt-0.5 font-bold">school_{subdomainVal.replace(/-/g, '_')}</span>
               </div>
               <div>
-                <span className="text-slate-500 block">Administrator User</span>
-                <span className="text-slate-200 text-sm">{adminEmailVal}</span>
+                <span className="text-slate-400 block uppercase text-[10px] tracking-wider">Administrator User</span>
+                <span className="text-slate-800 text-sm mt-0.5">{adminEmailVal}</span>
               </div>
             </div>
           </div>
 
-          <div className="text-sm text-slate-400">
-            You can now proceed to log in. Please use the subdomain <span className="font-bold text-amber-500">{subdomainVal}</span> to configure this school.
+          <div className="text-xs text-slate-500 leading-relaxed font-medium">
+            You can now proceed to log in. Please use subdomain <span className="font-bold text-blue-700 font-mono">{subdomainVal}</span> to configure this school.
           </div>
 
           <button
             onClick={onBackToLogin}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:from-emerald-700 active:to-teal-800 text-slate-950 font-bold py-3.5 px-4 rounded-xl transition shadow-lg"
+            className="w-full bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl transition shadow-md cursor-pointer shadow-blue-750/15"
           >
             Go to Login
           </button>
@@ -213,39 +212,38 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-200 relative overflow-hidden">
-      {/* Dynamic Background Gradients */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
-
-      <div className="w-full max-w-3xl space-y-8 relative z-10">
+    <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center p-6 text-slate-800 relative overflow-hidden academic-mesh-grid">
+      
+      <div className="w-full max-w-2xl space-y-8 relative z-10">
         {/* Header */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-900 border border-slate-800 rounded-full text-xs font-semibold tracking-wide text-amber-400">
-            <Sparkles className="h-3.5 w-3.5" />
-            Establish Your School Dashboard
+          <div className="flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold tracking-wider text-blue-700 uppercase shadow-sm">
+            <Sparkles className="h-3.5 w-3.5 text-blue-650" />
+            Establish School Workspace
           </div>
           <div className="flex items-center gap-3">
-            <GraduationCap className="h-10 w-10 text-amber-500" />
-            <span className="font-display font-black text-3xl tracking-wider text-white">SKOLR Platform</span>
+            <div className="h-10 w-10 bg-gradient-to-tr from-blue-600 to-indigo-750 rounded-xl flex items-center justify-center shadow-md">
+              <GraduationCap className="h-5.5 w-5.5 text-white" />
+            </div>
+            <span className="font-display font-black text-2xl tracking-wider text-slate-900">SKOLR Platform</span>
           </div>
-          <p className="text-slate-400 text-sm max-w-md">
+          <p className="text-slate-550 text-xs max-w-sm leading-relaxed font-medium">
             Onboard your educational institute with an isolated database schema, structured roles, and billing preferences.
           </p>
         </div>
 
-        {/* Step Indicator */}
+        {/* Step Timeline Indicator */}
         <div className="max-w-md mx-auto flex items-center justify-between relative px-2">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-800 w-full z-0"></div>
-          <div className={`absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-amber-500 transition-all duration-300 z-0`} style={{ width: `${((step - 1) / 2) * 100}%` }}></div>
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-200 w-full z-0"></div>
+          <div className={`absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-blue-600 transition-all duration-300 z-0`} style={{ width: `${((step - 1) / 2) * 100}%` }}></div>
 
           {[1, 2, 3].map((s) => (
             <div
               key={s}
-              className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm border-2 z-10 transition duration-300 ${
+              className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-xs border-2 z-10 transition duration-350 cursor-pointer ${
                 step >= s 
-                  ? 'bg-amber-500 border-amber-500 text-slate-950 shadow-md shadow-amber-500/20' 
-                  : 'bg-slate-900 border-slate-800 text-slate-400'
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/10' 
+                  : 'bg-white border-slate-200 text-slate-400'
               }`}
             >
               {step > s ? <Check className="h-4 w-4 stroke-[3px]" /> : s}
@@ -255,17 +253,17 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
 
         {/* Error Alert */}
         {error && (
-          <div className="bg-red-950/40 border border-red-500/20 text-red-200 px-4 py-3.5 rounded-xl flex items-start gap-3 text-sm max-w-2xl mx-auto">
-            <ShieldAlert className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+          <div className="bg-rose-50 border border-rose-150 text-rose-800 p-4 rounded-xl flex items-start gap-3 text-xs font-semibold leading-relaxed max-w-xl mx-auto">
+            <ShieldAlert className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold block">Onboarding Error</span>
-              <span className="text-slate-300">{error}</span>
+              <span className="font-bold block uppercase tracking-wider text-[10px]">Onboarding Error</span>
+              <span className="text-slate-600">{error}</span>
             </div>
           </div>
         )}
 
-        {/* Step Form Box */}
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 lg:p-8 backdrop-blur-md shadow-xl max-w-2xl mx-auto">
+        {/* Step Form Card */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 lg:p-8 shadow-sm max-w-xl mx-auto w-full">
           <form 
             onSubmit={handleFormSubmit} 
             className="space-y-6"
@@ -273,48 +271,48 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
             
             {/* Step 1: School Identity */}
             {step === 1 && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                  <School className="h-5 w-5 text-amber-500" />
-                  <h3 className="text-lg font-bold text-white">School Identity & Subdomain</h3>
+              <div className="space-y-5 animate-scale-in">
+                <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100">
+                  <School className="h-5 w-5 text-blue-700" />
+                  <h3 className="text-base font-bold text-slate-900 font-display">School Identity & Subdomain</h3>
                 </div>
 
-                <div className="space-y-5">
+                <div className="space-y-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <label className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">
                       Official School Name
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Prestige Public School"
+                      placeholder="e.g. DAV Public School"
                       {...register('name')}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition duration-200"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/10 placeholder:text-slate-400 font-medium"
                     />
                     {errors.name && (
-                      <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{errors.name.message}</p>
                     )}
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <label className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">
                       Subdomain Prefix
                     </label>
-                    <div className="flex rounded-xl bg-slate-950 border border-slate-800 focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500 overflow-hidden transition">
+                    <div className="flex rounded-xl bg-white border border-slate-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/10 overflow-hidden transition">
                       <input
                         type="text"
-                        placeholder="prestige"
+                        placeholder="davprestige"
                         {...register('subdomain')}
-                        className="flex-1 bg-transparent px-4 py-3 text-sm text-slate-200 focus:outline-none"
+                        className="flex-1 bg-transparent px-4 py-3 text-sm text-slate-800 focus:outline-none font-medium placeholder:text-slate-400"
                       />
-                      <span className="bg-slate-900 border-l border-slate-800 text-slate-400 px-4 py-3 text-sm font-semibold select-none">
+                      <span className="bg-slate-50 border-l border-slate-200 text-slate-550 px-4 py-3 text-sm font-semibold select-none font-mono">
                         .skolr.in
                       </span>
                     </div>
-                    <p className="text-slate-500 text-[11px] leading-relaxed">
-                      Only alphanumeric letters and dashes. This determines the unique URL allocated to resolve your database schema.
+                    <p className="text-slate-400 text-[10px] leading-relaxed font-medium">
+                      Only alphanumeric letters and dashes. This determines the unique URL resolved to identify your schema.
                     </p>
                     {errors.subdomain && (
-                      <p className="text-red-400 text-xs mt-1">{errors.subdomain.message}</p>
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{errors.subdomain.message}</p>
                     )}
                   </div>
                 </div>
@@ -323,71 +321,71 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
 
             {/* Step 2: Administrative Account */}
             {step === 2 && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                  <User className="h-5 w-5 text-amber-500" />
-                  <h3 className="text-lg font-bold text-white">Administrator Credentials</h3>
+              <div className="space-y-5 animate-scale-in">
+                <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100">
+                  <User className="h-5 w-5 text-blue-700" />
+                  <h3 className="text-base font-bold text-slate-900 font-display">Administrator Credentials</h3>
                 </div>
 
-                <div className="space-y-5">
+                <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      <label className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">
                         First Name
                       </label>
                       <input
                         type="text"
                         placeholder="Principal"
                         {...register('admin_first_name')}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition duration-200"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/10 placeholder:text-slate-400 font-medium"
                       />
                       {errors.admin_first_name && (
-                        <p className="text-red-400 text-xs mt-1">{errors.admin_first_name.message}</p>
+                        <p className="text-rose-500 text-xs mt-1 font-semibold">{errors.admin_first_name.message}</p>
                       )}
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      <label className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">
                         Last Name
                       </label>
                       <input
                         type="text"
                         placeholder="Officer"
                         {...register('admin_last_name')}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition duration-200"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/10 placeholder:text-slate-400 font-medium"
                       />
                       {errors.admin_last_name && (
-                        <p className="text-red-400 text-xs mt-1">{errors.admin_last_name.message}</p>
+                        <p className="text-rose-500 text-xs mt-1 font-semibold">{errors.admin_last_name.message}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <label className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">
                       Admin Email
                     </label>
                     <input
                       type="email"
                       placeholder="admin@yourschool.com"
                       {...register('admin_email')}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition duration-200"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/10 placeholder:text-slate-400 font-medium"
                     />
                     {errors.admin_email && (
-                      <p className="text-red-400 text-xs mt-1">{errors.admin_email.message}</p>
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{errors.admin_email.message}</p>
                     )}
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <label className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">
                       Secure Password
                     </label>
                     <input
                       type="password"
                       placeholder="••••••••"
                       {...register('admin_password')}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition duration-200"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/10 placeholder:text-slate-400 font-medium"
                     />
                     {errors.admin_password && (
-                      <p className="text-red-400 text-xs mt-1">{errors.admin_password.message}</p>
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{errors.admin_password.message}</p>
                     )}
                   </div>
                 </div>
@@ -396,10 +394,10 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
 
             {/* Step 3: Subscription Tier Allocation */}
             {step === 3 && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                  <Sparkles className="h-5 w-5 text-amber-500" />
-                  <h3 className="text-lg font-bold text-white">Choose ERP Subscription Tier</h3>
+              <div className="space-y-5 animate-scale-in">
+                <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100">
+                  <Sparkles className="h-5 w-5 text-blue-700" />
+                  <h3 className="text-base font-bold text-slate-900 font-display">Choose ERP Subscription Tier</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -407,27 +405,27 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
                     <div
                       key={p.code}
                       onClick={() => setValue('plan_code', p.code)}
-                      className={`relative border rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition select-none ${
+                      className={`relative border rounded-xl p-4 flex flex-col justify-between cursor-pointer transition select-none ${
                         selectedPlan === p.code
-                          ? 'border-amber-500 bg-amber-500/5 shadow-md shadow-amber-500/10'
-                          : 'border-slate-800 hover:border-slate-700 bg-slate-950/40'
+                          ? 'border-blue-600 bg-blue-50/20 shadow-md shadow-blue-600/5'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
                       }`}
                     >
                       {p.recommended && (
-                        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-extrabold uppercase bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full tracking-wider">
+                        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-extrabold uppercase bg-blue-600 text-white px-2 py-0.5 rounded-full tracking-wider">
                           Recommended
                         </span>
                       )}
 
                       <div className="space-y-2">
-                        <div className="text-sm font-extrabold text-white">{p.name}</div>
-                        <div className="text-[10px] text-slate-450 uppercase tracking-wider font-semibold">{p.limit}</div>
-                        <div className="text-lg font-bold text-amber-500">{p.price}</div>
+                        <div className="text-xs font-extrabold text-slate-900 font-display">{p.name}</div>
+                        <div className="text-[9px] text-slate-450 uppercase tracking-wider font-semibold font-mono">{p.limit}</div>
+                        <div className="text-base font-extrabold text-blue-700 font-display mt-1">{p.price}</div>
                         
-                        <ul className="text-[10px] text-slate-400 space-y-1.5 pt-2 border-t border-slate-800/80">
+                        <ul className="text-[9px] text-slate-500 space-y-1.5 pt-2.5 border-t border-slate-100 font-sans font-medium">
                           {p.features.map((f, i) => (
                             <li key={i} className="flex items-start gap-1">
-                              <Check className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />
+                              <Check className="h-3 w-3 text-blue-600 shrink-0 mt-0.5" />
                               <span>{f}</span>
                             </li>
                           ))}
@@ -440,12 +438,12 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
             )}
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
               {step > 1 ? (
                 <button
                   type="button"
                   onClick={prevStep}
-                  className="bg-slate-900 border border-slate-800 text-slate-300 font-semibold px-4 py-2.5 rounded-xl hover:bg-slate-850 hover:text-white transition flex items-center gap-1.5 text-sm"
+                  className="bg-white border border-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl hover:bg-slate-50 transition flex items-center gap-1.5 text-xs cursor-pointer"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back
@@ -454,7 +452,7 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
                 <button
                   type="button"
                   onClick={onBackToLogin}
-                  className="text-slate-400 hover:text-white transition text-sm font-semibold"
+                  className="text-slate-450 hover:text-slate-700 transition text-xs font-bold cursor-pointer"
                 >
                   Return to Sign In
                 </button>
@@ -464,7 +462,7 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="bg-amber-500 text-slate-950 font-bold px-5 py-2.5 rounded-xl hover:bg-amber-600 active:bg-amber-700 transition flex items-center gap-1.5 text-sm ml-auto"
+                  className="bg-gradient-to-r from-blue-700 to-indigo-850 hover:from-blue-600 hover:to-indigo-750 text-white font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-1.5 text-xs ml-auto cursor-pointer"
                 >
                   Continue
                   <ArrowRight className="h-4 w-4" />
@@ -473,10 +471,10 @@ export function OnboardingPage({ onBackToLogin }: OnboardingPageProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl hover:bg-amber-600 active:bg-amber-700 transition flex items-center justify-center gap-2 text-sm ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-blue-700 to-indigo-850 hover:from-blue-600 hover:to-indigo-750 text-white font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-xs ml-auto disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? (
-                    <span className="border-2 border-slate-950 border-t-transparent w-4 h-4 rounded-full animate-spin"></span>
+                    <span className="border-2 border-white border-t-transparent w-4 h-4 rounded-full animate-spin"></span>
                   ) : (
                     <>
                       <span>Submit Onboarding</span>

@@ -18,6 +18,8 @@ import { studentApi } from '../../students/api/studentApi';
 import { academicsApi } from '../../academics/api/academicsApi';
 import { CustomSelect } from '../../../components/CustomSelect';
 import { DatePicker } from '../../../components/DatePicker';
+import { confirm } from '../../../stores/useConfirmStore';
+
 
 const examSchema = z.object({
   name: z.string().min(2, "Exam name must be at least 2 characters").max(100),
@@ -185,8 +187,8 @@ export function ExamSchedulePage() {
     updateExamStatusMutation.mutate({ id: exam.id, status: newStatus });
   };
 
-  const handleDeleteExam = (id: string) => {
-    if (confirm('Are you sure you want to delete this exam session? This will delete all schedules and entered marks.')) {
+  const handleDeleteExam = async (id: string) => {
+    if (await confirm('Are you sure you want to delete this exam session? This will delete all schedules and entered marks.', { type: 'danger', title: 'Delete Exam Term' })) {
       deleteExamMutation.mutate(id);
     }
   };

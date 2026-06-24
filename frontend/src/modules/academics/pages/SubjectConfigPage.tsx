@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 
 import { academicsApi, SubjectCreateData } from '../api/academicsApi';
+import { confirm } from '../../../stores/useConfirmStore';
+
 
 const subjectSchema = z.object({
   name: z.string().min(2, "Subject name must be at least 2 characters").max(100),
@@ -79,8 +81,8 @@ export function SubjectConfigPage() {
     createMutation.mutate(values);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this subject? This might affect existing homework/records.')) {
+  const handleDelete = async (id: string) => {
+    if (await confirm('Are you sure you want to delete this subject? This might affect existing homework/records.', { type: 'danger', title: 'Delete Subject' })) {
       deleteMutation.mutate(id);
     }
   };

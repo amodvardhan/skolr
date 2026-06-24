@@ -21,6 +21,7 @@ import { CustomSelect } from '../../../components/CustomSelect';
 import { useAuthStore } from '../../../stores/authStore';
 import { DatePicker } from '../../../components/DatePicker';
 import { toast } from '../../../stores/useToastStore';
+import { confirm } from '../../../stores/useConfirmStore';
 
 const homeworkSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters").max(200),
@@ -116,8 +117,8 @@ export function HomeworkListPage({ onViewDetails }: HomeworkListPageProps) {
     createMutation.mutate(values);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this homework? All grades and submissions will be permanently removed.')) {
+  const handleDelete = async (id: string) => {
+    if (await confirm('Are you sure you want to delete this homework? All grades and submissions will be permanently removed.', { type: 'danger', title: 'Delete Homework' })) {
       deleteMutation.mutate(id);
     }
   };

@@ -36,6 +36,7 @@ import {
 import { cmsApi, CMSPage, CMSInquiry } from '../api/cmsApi';
 import { useAuthStore } from '../../../stores/authStore';
 import { useUIStore } from '../../../stores/uiStore';
+import { confirm } from '../../../stores/useConfirmStore';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 const backendRootUrl = apiBaseUrl.replace('/api/v1', '');
@@ -657,8 +658,8 @@ export function CMSEditorPage() {
     });
   };
 
-  const handleDeletePage = (pageId: string) => {
-    if (confirm('Are you sure you want to delete this page? This action is permanent.')) {
+  const handleDeletePage = async (pageId: string) => {
+    if (await confirm('Are you sure you want to delete this page? This action is permanent.', { type: 'danger', title: 'Delete Page' })) {
       deletePageMutation.mutate(pageId);
     }
   };

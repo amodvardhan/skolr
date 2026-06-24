@@ -13,6 +13,8 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { cmsApi, CMSInquiry } from '../api/cmsApi';
+import { confirm } from '../../../stores/useConfirmStore';
+
 
 const COLUMNS = [
   { id: 'new', label: 'New Lead', color: 'border-blue-400 bg-blue-50/50 text-blue-700 hover:bg-blue-50' },
@@ -298,13 +300,13 @@ export function AdmissionsCRMPage({ onConvertToAdmission }: AdmissionsCRMPagePro
                     {/* Convert Button for Admissions Leads */}
                     {selectedInquiry.status !== 'admitted' && selectedInquiry.student_name && (
                       <button
-                        onClick={() => {
-                          if (confirm(`Convert lead ${selectedInquiry.name} directly to Student Admission profile?`)) {
+                        onClick={async () => {
+                          if (await confirm(`Convert lead ${selectedInquiry.name} directly to Student Admission profile?`, { type: 'info', title: 'Convert Lead to Student' })) {
                             convertMutation.mutate(selectedInquiry.id);
                           }
                         }}
                         disabled={convertMutation.isPending}
-                        className="w-full btn-primary flex items-center justify-center gap-2 py-2.5 shadow-md shadow-primary-light/10 font-semibold"
+                        className="w-full btn-primary flex items-center justify-center gap-2 py-2.5 shadow-md shadow-primary-light/10 font-semibold cursor-pointer"
                       >
                         {convertMutation.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />

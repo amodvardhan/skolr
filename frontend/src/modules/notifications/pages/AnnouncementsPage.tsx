@@ -21,6 +21,8 @@ import { studentApi } from '../../students/api/studentApi';
 import { CustomSelect } from '../../../components/CustomSelect';
 import { cmsApi } from '../../cms/api/cmsApi';
 import { toast } from '../../../stores/useToastStore';
+import { confirm } from '../../../stores/useConfirmStore';
+
 
 // Validation Schema for Creating a Template
 const templateSchema = z.object({
@@ -188,8 +190,8 @@ export function AnnouncementsPage() {
     createTemplateMutation.mutate(values);
   };
 
-  const onDeleteTemplate = (id: string) => {
-    if (confirm('Are you sure you want to delete this template?')) {
+  const onDeleteTemplate = async (id: string) => {
+    if (await confirm('Are you sure you want to delete this template?', { type: 'danger', title: 'Delete Template' })) {
       deleteTemplateMutation.mutate(id);
     }
   };

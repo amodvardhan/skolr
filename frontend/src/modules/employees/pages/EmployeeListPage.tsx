@@ -13,6 +13,7 @@ import {
 
 import { employeesApi, EmployeeFilters } from '../api/employeesApi';
 import { CustomSelect } from '../../../components/CustomSelect';
+import { confirm } from '../../../stores/useConfirmStore';
 
 interface EmployeeListPageProps {
   onAddClick: () => void;
@@ -46,7 +47,7 @@ export function EmployeeListPage({ onAddClick, onViewDetails }: EmployeeListPage
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to deactivate and remove this employee from active rosters?')) {
+    if (await confirm('Are you sure you want to deactivate and remove this employee from active rosters?', { type: 'danger', title: 'Deactivate Employee Record' })) {
       try {
         await employeesApi.delete(id);
         alert('Employee record deactivated.');
@@ -57,6 +58,7 @@ export function EmployeeListPage({ onAddClick, onViewDetails }: EmployeeListPage
       }
     }
   };
+
 
   const employeesList = data?.data || [];
   const pagination = data?.pagination || { page: 1, per_page: 10, total: 0, pages: 1 };
